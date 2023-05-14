@@ -1,0 +1,48 @@
+# This file exists so you can easily regenerate your project.
+#
+# `cookiepatcher` is a convenient shim around `cookiecutter`
+# for regenerating projects (it will generate a .cookiecutterrc
+# automatically for any template). To use it:
+#
+#    pip install cookiepatcher
+#    cookiepatcher gh:sterlingpeet/cookiecutter-cfs-app DDFK
+#
+# See:
+#    https://pypi.org/project/cookiepatcher
+#
+# Alternatively, you can run:
+#
+#    cookiecutter --overwrite-if-exists --config-file=DDFK/.cookiecutterrc gh:sterlingpeet/cookiecutter-cfs-app
+
+default_context:
+
+    __app_baseline_version:    'v0.1.99'
+    __app_build_number:        '1'
+    __app_filename_slug:       'ddfk_app'
+    __app_slug_uc:             'DDFK_APP'
+    _output_dir:               '/Users/speet3/src/MoonRobot/apps'
+    _template:                 '../../cookiecutter-cfs-app'
+    app_base_perf_id:          '91'
+    app_cmd_mid:               '0x1898'
+    app_display_name:          'Differential Drive Forward Kinematics'
+    app_hk_tlm_mid:            '0x0898'
+    app_include_github_actions: 'no'
+    app_major_version:         '0'
+    app_minor_version:         '1'
+    app_readme_title:          'Differential Drive Forward Kinematics cFS App'
+    app_repo:                  'DDFK'
+    app_repo_base:             'https://github.com'
+    app_revision:              '99'
+    app_send_hk_mid:           '0x1899'
+    app_short_description:     'Differential Drive Forward Kinematics app for the cFS FSW framework.'
+    app_slug:                  'DDFK'
+    app_table_slug:            'DDFKAppTable'
+    app_url:                   'https://github.com/SterlingPeet/MoonRobot/apps/DDFK'
+    app_user_org:              'SterlingPeet'
+    email:                     'noreply@nospam.com'
+    full_name:                 'Sterling Peet'
+    library_dep:               'no'
+    library_function:          'SAMPLE_LIB_Function'
+    library_h_file:            'sample_lib.h'
+    library_name:              'sample_lib'
+    license:                   'None'
