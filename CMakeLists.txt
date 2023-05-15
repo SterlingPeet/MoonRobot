@@ -3,10 +3,18 @@ cmake_minimum_required(VERSION 3.24)
 project(cFS LANGUAGES C)
 
 set(CMAKE_BUILD_TYPE "debug")
-set(CMAKE_INSTALL_PREFIX "/exe")
+set(CMAKE_INSTALL_PREFIX "exe")
 
-add_subdirectory(cfe)
 
+add_subdirectory(cfe )
+
+message ( dep for ${CMAKE_BINARY_DIR})
+# add_custom_target(link-cfe-tools
+#                   COMMAND echo 3333333333333333333333333333333333333333333; ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/cfe/tools ${CMAKE_BINARY_DIR}/tools
+#                   BYPRODUCTS ${CMAKE_BINARY_DIR}/tools/elf2cfetbl/elf2cfetbl)
+
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/cfe/tools ${CMAKE_BINARY_DIR}/tools
+                  )
 
 function (_get_all_cmake_targets out_var current_dir)
     get_property(targets DIRECTORY ${current_dir} PROPERTY BUILDSYSTEM_TARGETS)
