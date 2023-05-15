@@ -10,10 +10,6 @@
 	path = psp
 	url = https://github.com/nasa/PSP.git
   branch = main
-[submodule "tools/cFS-GroundSystem"]
-	path = tools/cFS-GroundSystem
-	url = https://github.com/nasa/cFS-GroundSystem.git
-  branch = main
 [submodule "tools/elf2cfetbl"]
 	path = tools/elf2cfetbl
 	url = https://github.com/nasa/elf2cfetbl.git
