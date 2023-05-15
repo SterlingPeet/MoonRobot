@@ -10,18 +10,6 @@
 	path = psp
 	url = https://github.com/nasa/PSP.git
   branch = main
-[submodule "apps/ci_lab"]
-	path = apps/ci_lab
-	url = https://github.com/nasa/ci_lab.git
-  branch = main
-[submodule "apps/sch_lab"]
-	path = apps/sch_lab
-	url = https://github.com/nasa/sch_lab.git
-  branch = main
-[submodule "apps/to_lab"]
-	path = apps/to_lab
-	url = https://github.com/nasa/to_lab.git
-  branch = main
 [submodule "tools/cFS-GroundSystem"]
 	path = tools/cFS-GroundSystem
 	url = https://github.com/nasa/cFS-GroundSystem.git
