@@ -187,6 +187,17 @@ int32 ROMIMOT_Init(void)
     }
 
     /*
+    ** Subscribe to wakeup command packets
+    */
+    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ROMIMOT_WAKEUP_MID), ROMIMOT_Data.CommandPipe);
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("ROMIMOT: Error Subscribing to wakeup, RC = 0x%08lX\n", (unsigned long)status);
+
+        return status;
+    }
+
+    /*
     ** Register Table(s)
     */
     status = CFE_TBL_Register(&ROMIMOT_Data.TblHandles[0], "RomimotTable", sizeof(ROMIMOT_Table_t),
@@ -222,8 +233,6 @@ void ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
 
     CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
 
-    CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT Process Command called with MsgID %x", CFE_SB_MsgIdToValue(MsgId));
-
     switch (CFE_SB_MsgIdToValue(MsgId))
     {
         case ROMIMOT_CMD_MID:
@@ -232,6 +241,10 @@ void ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
 
         case ROMIMOT_SEND_HK_MID:
             ROMIMOT_ReportHousekeeping((CFE_MSG_CommandHeader_t *)SBBufPtr);
+            break;
+
+        case ROMIMOT_WAKEUP_MID:
+            RIMIMOT_Wakeup((CFE_MSG_CommandHeader_t *)SBBufPtr);
             break;
 
         default:
@@ -353,6 +366,15 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
     return CFE_SUCCESS;
 }
 
+
+int32 RIMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
+{
+    ROMIMOT_Data.CmdCounter++;
+    //CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
+
+    printf("wakeup\n");
+    return CFE_SUCCESS;
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /* ROMIMOT NOOP commands                                                       */

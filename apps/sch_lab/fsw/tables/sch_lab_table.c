@@ -69,40 +69,41 @@
 */
 
 SCH_LAB_ScheduleTable_t SCH_TBL_Structure = {
-    .TickRate = 1,
+    .TickRate = 10,
     .Config   = {
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 4, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 4, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 4, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_SB_SEND_HK_MID), 4, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_ES_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_EVS_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_TIME_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_SB_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CFE_TBL_SEND_HK_MID), 40, 0},
 #ifdef HAVE_CI_LAB
-        {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(CI_LAB_SEND_HK_MID), 40, 0},
 #endif
 #ifdef HAVE_TO_LAB
-        {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(TO_LAB_SEND_HK_MID), 40, 0},
 #endif
 #ifdef HAVE_SAMPLE_APP
-        {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SAMPLE_APP_SEND_HK_MID), 40, 0},
 #endif
 #ifdef HAVE_SC_APP
-        {CFE_SB_MSGID_WRAP_VALUE(SC_SEND_HK_MID), 4, 0},
-        {CFE_SB_MSGID_WRAP_VALUE(SC_1HZ_WAKEUP_MID), 1, 0}, /* Example of a 1hz packet */
+        {CFE_SB_MSGID_WRAP_VALUE(SC_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(SC_1HZ_WAKEUP_MID), 10, 0}, /* Example of a 1hz packet */
 #endif
 #ifdef HAVE_HS_APP
-        {CFE_SB_MSGID_WRAP_VALUE(HS_SEND_HK_MID), 0, 0}, /* Example of a message that wouldn't be sent */
+        {CFE_SB_MSGID_WRAP_VALUE(HS_SEND_HK_MID), 00, 0}, /* Example of a message that wouldn't be sent */
 #endif
 #ifdef HAVE_FM_APP
-        {CFE_SB_MSGID_WRAP_VALUE(FM_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(FM_SEND_HK_MID), 40, 0},
 #endif
 #ifdef HAVE_DS_APP
-        {CFE_SB_MSGID_WRAP_VALUE(DS_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(DS_SEND_HK_MID), 40, 0},
 #endif
 #ifdef HAVE_LC_APP
-        {CFE_SB_MSGID_WRAP_VALUE(LC_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(LC_SEND_HK_MID), 40, 0},
 #endif
 #ifdef HAVE_ROMIMOT
-        {CFE_SB_MSGID_WRAP_VALUE(ROMIMOT_SEND_HK_MID), 4, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(ROMIMOT_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(ROMIMOT_WAKEUP_MID), 1, 0}, /* 10 Hz for romi motor control */
 #endif
     }};
 

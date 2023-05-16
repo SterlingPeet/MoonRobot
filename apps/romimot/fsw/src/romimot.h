@@ -117,6 +117,7 @@ int32 ROMIMOT_Init(void);
 void  ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr);
 void  ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr);
 int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg);
+int32 RIMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg);
 int32 ROMIMOT_ResetCounters(const ROMIMOT_ResetCountersCmd_t *Msg);
 int32 ROMIMOT_Process(const ROMIMOT_ProcessCmd_t *Msg);
 int32 ROMIMOT_SetMotEnable(const ROMIMOT_SetEnableCmd_t *Msg, uint8_t enable);
