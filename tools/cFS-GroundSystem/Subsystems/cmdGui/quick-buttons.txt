@@ -30,4 +30,3 @@ Table Services,             CFE_TBL_CMD,        TBL No-Op,     0, 0x1804, LE, 12
 Time Services,              CFE_TIME_CMD,       Time No-Op,    0, 0x1805, LE, 127.0.0.1, 1234, CFE_TIME_NOOP_CC
 Event Services,             CFE_EVS_CMD,        EVS No-Op,     0, 0x1801, LE, 127.0.0.1, 1234, CFE_EVS_NOOP_CC
 Command Ingest,             CI_LAB_CMD,         CI No-Op,      0, 0x1884, LE, 127.0.0.1, 1234, CI_LAB_NOOP_CC
-Sample App,                 SAMPLE_APP_CMD,     Sample No-Op,  0, 0x1882, LE, 127.0.0.1, 1234, SAMPLE_APP_NOOP_CC
