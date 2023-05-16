@@ -27,11 +27,17 @@
 #include "romimot_events.h"
 #include "romimot_version.h"
 #include "romimot.h"
+#include "romimot_hw.h"
 #include "romimot_table.h"
 
 /* The sample_lib module provides the ROMIMOT_LIB_Function() prototype */
 #include <string.h>
 // #include "sample_lib.h"
+
+
+#include <sys/ioctl.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
 
 /*
 ** global data
@@ -216,6 +222,30 @@ int32 ROMIMOT_Init(void)
     CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT App Initialized.%s",
                       ROMIMOT_VERSION_STRING);
 
+
+    //setup I2C
+
+    char busname[20];
+    snprintf(busname, 20, "/dev/i2c-%d", i2cBusNumber);
+    ROMIMOT_Data.i2cfd = open_i2c_device(busname);
+
+    if (ROMIMOT_Data.i2cfd < 0) {
+        CFE_ES_WriteToSysLog("failed to open I2C bus %20s", busname);
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+
+    if (ioctl(ROMIMOT_Data.i2cfd, I2C_SLAVE, romiaddr) < 0) {
+        CFE_ES_WriteToSysLog("failed to select romi I2C device");
+        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+    }
+
+    // grab the current encoder positions as the current target positions
+    struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
+    ROMIMOT_Data.TargetPosLeft = encVals.left;
+    ROMIMOT_Data.TargetPosRight = encVals.right;
+
+
     return CFE_SUCCESS;
 }
 
@@ -244,7 +274,7 @@ void ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
             break;
 
         case ROMIMOT_WAKEUP_MID:
-            RIMIMOT_Wakeup((CFE_MSG_CommandHeader_t *)SBBufPtr);
+            ROMIMOT_Wakeup((CFE_MSG_CommandHeader_t *)SBBufPtr);
             break;
 
         default:
@@ -367,12 +397,62 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
 }
 
 
-int32 RIMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
+int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 {
     ROMIMOT_Data.CmdCounter++;
     //CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
 
-    printf("wakeup\n");
+    // printf("wakeup\n");
+
+
+    uint8_t buf[4];
+
+    romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
+    if (buf[0])
+    {
+        CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
+    }
+
+    float pcoeff = -0.05;
+    // for (int i=0; i<3; i++)
+    // {
+    //   ret = i2c_smbus_write_byte_data(ROMIMOT_Data.i2cfd, i, buf[i]);
+    // }
+    // // printf(" led write ret was %d\n", ret);
+    //
+    //
+    // // romiRead(i2cfd, 39, 4, buf);
+    //   // printf(" enc was %d %d\n", (int16_t)((buf[1]<<8) + buf[0]), (int16_t)((buf[3]<<8) + buf[2]));
+    struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
+    // // motVals.left =  (int)(encVals.left * pcoeff);
+    // // motVals.right = (int)(encVals.right * pcoeff);
+    uint16_t left = (int)((encVals.left - ROMIMOT_Data.TargetPosLeft ) * pcoeff);
+    uint16_t right = (int)((encVals.right - ROMIMOT_Data.TargetPosRight) * pcoeff);
+    if (ROMIMOT_Data.MotorsEnabled)
+    {
+        romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
+
+        // we'll advance our target position by the delta
+        ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
+        ROMIMOT_Data.TargetPosRight += ROMIMOT_Data.TargetDeltaRight;
+        // but if we're close to rollover, we'll swap direction
+        if (encVals.left > 10000)
+        {
+            ROMIMOT_Data.TargetDeltaLeft = 0;
+            ROMIMOT_Data.TargetDeltaRight = 0;
+        }
+        else if (encVals.left < -10000)
+        {
+            ROMIMOT_Data.TargetDeltaLeft = 0;
+            ROMIMOT_Data.TargetDeltaRight = 0;
+        }
+
+    } else
+    {
+        romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+    }
+
+
     return CFE_SUCCESS;
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/

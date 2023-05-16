@@ -1,7 +1,7 @@
 project(CFE_ROMIMOT C)
 
 # Create the app module
-add_cfe_app(romimot fsw/src/romimot.c)
+add_cfe_app(romimot fsw/src/romimot.c fsw/src/romimot_hw.c)
 
 # Include the public API from sample_lib to demonstrate how
 # to call library-provided functions
