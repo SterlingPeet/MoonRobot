@@ -52,8 +52,8 @@ typedef struct
 typedef struct
 {
     CFE_MSG_CommandHeader_t CmdHeader; /**< \brief Command header */
-    int16_t cmdMotLeft;
-    int16_t cmdMotRight;
+    int16 cmdMotLeft;
+    int16 cmdMotRight;
 } ROMIMOT_MotCmd_t;
 
 

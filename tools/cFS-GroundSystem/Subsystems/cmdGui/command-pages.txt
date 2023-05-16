@@ -28,6 +28,6 @@ Time Services,              CFE_TIME_CMD,       0x1805, LE, UdpCommands.py,  127
 Event Services,             CFE_EVS_CMD,        0x1801, LE, UdpCommands.py,  127.0.0.1,   1234
 Command Ingest,             CI_LAB_CMD,         0x1884, LE, UdpCommands.py,  127.0.0.1,   1234
 Telemetry Output,           TO_LAB_CMD,         0x1880, LE, UdpCommands.py,  127.0.0.1,   1234
-Spare,                                    ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
+Romi Motor,                 ROMIMOT_CMD,        0x1892, LE, UdpCommands.py,  127.0.0.1,   1234
 Spare,                                    ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
 Spare,                                    ,     0x0000, LE, UdpCommands.py,  127.0.0.1,   1234
