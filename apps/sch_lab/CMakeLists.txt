@@ -5,7 +5,7 @@ project(CFS_SCH_LAB C)
 # it is easiest to add them as directory properties so they won't
 # be considered include directories for TO_LAB itself.  Each one
 # gets a macro for conditional inclusion in the subscription table.
-foreach(EXT_APP ci_lab to_lab sample_app sc hs lc ds fm)
+foreach(EXT_APP ci_lab to_lab sample_app sc hs lc ds fm romimot)
   list (FIND TGTSYS_${SYSVAR}_APPS ${EXT_APP} HAVE_APP)
   if (HAVE_APP GREATER_EQUAL 0)
     include_directories($<TARGET_PROPERTY:${EXT_APP},INTERFACE_INCLUDE_DIRECTORIES>)

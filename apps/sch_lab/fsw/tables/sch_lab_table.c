@@ -55,6 +55,10 @@
 #include "lc_msgids.h"
 #endif
 
+#ifdef HAVE_ROMIMOT
+#include "romimot_msgids.h"
+#endif
+
 /*
 ** SCH Lab schedule table
 ** When populating this table:
@@ -96,6 +100,9 @@ SCH_LAB_ScheduleTable_t SCH_TBL_Structure = {
 #endif
 #ifdef HAVE_LC_APP
         {CFE_SB_MSGID_WRAP_VALUE(LC_SEND_HK_MID), 4, 0},
+#endif
+#ifdef HAVE_ROMIMOT
+        {CFE_SB_MSGID_WRAP_VALUE(ROMIMOT_SEND_HK_MID), 4, 0},
 #endif
     }};
 
