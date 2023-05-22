@@ -61,7 +61,7 @@ typedef struct
     /*
     ** Command interface counters...
     */
-    uint8 CmdCounter;
+    uint16 CmdCounter;
     uint8 ErrCounter;
 
     /*

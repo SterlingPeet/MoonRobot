@@ -401,29 +401,25 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 {
     ROMIMOT_Data.CmdCounter++;
     //CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
-
-    // printf("wakeup\n");
-
-
     uint8_t buf[4];
 
+    // Read the buttons on the ROMI, emit an event if pressed.
     romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
     if (buf[0])
     {
         CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
     }
 
+    // Read the battery voltage on the ROMI, store it in the HK struct.
+    romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
+    //printf("bat was %d\n", ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
+
     float pcoeff = -0.05;
-    // for (int i=0; i<3; i++)
-    // {
-    //   ret = i2c_smbus_write_byte_data(ROMIMOT_Data.i2cfd, i, buf[i]);
-    // }
-    // // printf(" led write ret was %d\n", ret);
-    //
-    //
-    // // romiRead(i2cfd, 39, 4, buf);
-    //   // printf(" enc was %d %d\n", (int16_t)((buf[1]<<8) + buf[0]), (int16_t)((buf[3]<<8) + buf[2]));
+
+    // Read the motor encoders
     struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
+    ROMIMOT_Data.HkTlm.Payload.LeftMotorEncoder = encVals.left;
+    ROMIMOT_Data.HkTlm.Payload.RightMotorEncoder = encVals.right;
     // // motVals.left =  (int)(encVals.left * pcoeff);
     // // motVals.right = (int)(encVals.right * pcoeff);
     uint16_t left = (int)((encVals.left - ROMIMOT_Data.TargetPosLeft ) * pcoeff);

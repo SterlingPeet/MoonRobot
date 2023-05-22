@@ -65,14 +65,14 @@ struct MotorPair romiEncoderRead(int i2cfd) {
 
   romiRead(i2cfd, romiCmdEncoder, 4, (uint8_t *)&encVals);
   //printf(" enc was %d %d\n", (int16_t)((buf[1]<<8) + buf[0]), (int16_t)((buf[3]<<8) + buf[2]));
-  printf("enc was %d %d\n", encVals.left, encVals.right);
+  //printf("enc was %d %d\n", encVals.left, encVals.right);
   return encVals;
 }
 
 
 int romiMotorWrite(int i2cfd, int16_t left, int16_t right) {
 
-  printf("motor set %d %d\n",left, right);
+  //printf("motor set %d %d\n",left, right);
   uint8_t buf[5];
   buf[0] = romiCmdMotor;
   buf[1] = left;

@@ -1,12 +1,12 @@
-# 
+#
 # telemetry-pages.txt
-# 
+#
 # This file should have the following comma delimited fields:
 #   1. Description
 #   2. Python class to handle the telemetry packets
 #   3. Packet ID in hex
-#   4. Telemetry definition file, or null 
-# 
+#   4. Telemetry definition file, or null
+#
 #  Note(1): A line that begins with # is a comment
 #  Note(2): Remove any blank lines from the end of the file
 #
@@ -16,6 +16,7 @@ EVS HK Tlm,                GenericTelemetry.py,     0x801,   cfe-evs-hk-tlm.txt
 SB HK Tlm,                 GenericTelemetry.py,     0x803,   cfe-sb-hk-tlm.txt
 TBL HK Tlm,                GenericTelemetry.py,     0x804,   cfe-tbl-hk-tlm.txt
 TIME HK Tlm,               GenericTelemetry.py,     0x805,   cfe-time-hk-tlm.txt
+ROMIMOT HK Tlm,            GenericTelemetry.py,     0x893,   cfs-romimot-hk-tlm.txt
 TIME DIAG Tlm 1,           GenericTelemetry.py,     0x806,   cfe-time-diag-tlm1.txt
 TIME DIAG Tlm 2,           GenericTelemetry.py,     0x806,   cfe-time-diag-tlm2.txt
 SB STATs Tlm,              GenericTelemetry.py,     0x80A,   cfe-sb-stats-tlm.txt

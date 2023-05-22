@@ -79,11 +79,12 @@ typedef ROMIMOT_MotCmd_t ROMIMOT_SetTargetDeltaCmd_t;
 
 typedef struct
 {
+    uint16 CommandCounter;
     uint8 CommandErrorCounter;
-    uint8 CommandCounter;
     uint8 I2CErrorCounter;
-
-    uint8 spare[2];
+    int16 LeftMotorEncoder;
+    int16 RightMotorEncoder;
+    uint16 BatteryMillivolts;
 } ROMIMOT_HkTlm_Payload_t;
 
 typedef struct
