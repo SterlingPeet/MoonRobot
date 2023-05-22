@@ -18,7 +18,7 @@
 
 /**
  * \file
- *   This file contains the source code for the ROMIMOT.
+ *   This file contains the source code for the ROMI Motor Driver App.
  */
 
 /*
@@ -30,10 +30,8 @@
 #include "romimot_hw.h"
 #include "romimot_table.h"
 
-/* The sample_lib module provides the ROMIMOT_LIB_Function() prototype */
-#include <string.h>
-// #include "sample_lib.h"
 
+#include <string.h>
 
 #include <sys/ioctl.h>
 #include <linux/i2c.h>
@@ -151,7 +149,7 @@ int32 ROMIMOT_Init(void)
     status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Error Registering Events, RC = 0x%08lX\n", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Registering Events, RC = 0x%08lX\n", (unsigned long)status);
         return status;
     }
 
@@ -167,7 +165,7 @@ int32 ROMIMOT_Init(void)
     status = CFE_SB_CreatePipe(&ROMIMOT_Data.CommandPipe, ROMIMOT_Data.PipeDepth, ROMIMOT_Data.PipeName);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Error creating pipe, RC = 0x%08lX\n", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error creating pipe, RC = 0x%08lX\n", (unsigned long)status);
         return status;
     }
 
@@ -177,7 +175,7 @@ int32 ROMIMOT_Init(void)
     status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ROMIMOT_SEND_HK_MID), ROMIMOT_Data.CommandPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Error Subscribing to HK request, RC = 0x%08lX\n", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Subscribing to HK request, RC = 0x%08lX\n", (unsigned long)status);
         return status;
     }
 
@@ -210,7 +208,7 @@ int32 ROMIMOT_Init(void)
                               CFE_TBL_OPT_DEFAULT, ROMIMOT_TblValidationFunc);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Error Registering Table, RC = 0x%08lX\n", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Registering Table, RC = 0x%08lX\n", (unsigned long)status);
 
         return status;
     }
@@ -219,7 +217,7 @@ int32 ROMIMOT_Init(void)
         status = CFE_TBL_Load(ROMIMOT_Data.TblHandles[0], CFE_TBL_SRC_FILE, ROMIMOT_TABLE_FILE);
     }
 
-    CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT App Initialized.%s",
+    CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT Initialized.%s",
                       ROMIMOT_VERSION_STRING);
 
 
@@ -252,13 +250,12 @@ int32 ROMIMOT_Init(void)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
 /*  Purpose:                                                                  */
-/*     This routine will process any packet that is received on the ROMIMOT    */
+/*     This routine will process any packet that is received on the ROMIMOT */
 /*     command pipe.                                                          */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 void ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
 {
-
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
 
     CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MsgId);
@@ -286,7 +283,7 @@ void ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
-/* ROMIMOT ground commands                                                     */
+/* ROMIMOT ground commands                                                 */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 void ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr)
@@ -298,7 +295,7 @@ void ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr)
     CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT Process Ground Command called with CommandCode %x", CommandCode);
 
     /*
-    ** Process "known" ROMIMOT app ground commands
+    ** Process "known" ROMIMOT ground commands
     */
     switch (CommandCode)
     {
@@ -453,7 +450,7 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
-/* ROMIMOT NOOP commands                                                       */
+/* ROMIMOT NOOP commands                                                   */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 int32 ROMIMOT_Noop(const ROMIMOT_NoopCmd_t *Msg)
@@ -493,31 +490,30 @@ int32 ROMIMOT_Process(const ROMIMOT_ProcessCmd_t *Msg)
 {
     int32               status;
     ROMIMOT_Table_t *TblPtr;
-    const char *        TableName = "ROMIMOT_APP.RomimotTable";
+    const char *        TableName = "ROMIMOT.RomimotTable";
 
-    /* Sample Use of Table */
+    /* ROMI Motor Driver Use of Table */
 
     status = CFE_TBL_GetAddress((void *)&TblPtr, ROMIMOT_Data.TblHandles[0]);
 
     if (status < CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Fail to get table address: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Fail to get table address: 0x%08lx", (unsigned long)status);
         return status;
     }
 
-    CFE_ES_WriteToSysLog("ROMIMOT: Table Value 1: %d  Value 2: %d", TblPtr->Int1, TblPtr->Int2);
+    CFE_ES_WriteToSysLog("ROMI Motor Driver App: Table Value 1: %d  Value 2: %d", TblPtr->Int1, TblPtr->Int2);
 
     ROMIMOT_GetCrc(TableName);
 
     status = CFE_TBL_ReleaseAddress(ROMIMOT_Data.TblHandles[0]);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Fail to release table address: 0x%08lx", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Fail to release table address: 0x%08lx", (unsigned long)status);
         return status;
     }
 
-    /* Invoke a function provided by ROMIMOT_LIB */
-    // ROMIMOT_LIB_Function();
+
 
     return CFE_SUCCESS;
 }
@@ -600,7 +596,7 @@ int32 ROMIMOT_TblValidationFunc(void *TblData)
     ROMIMOT_Table_t *TblDataPtr = (ROMIMOT_Table_t *)TblData;
 
     /*
-    ** Sample Table Validation
+    ** ROMI Motor Driver Table Validation
     */
     if (TblDataPtr->Int1 > ROMIMOT_TBL_ELEMENT_1_MAX)
     {
@@ -625,11 +621,11 @@ void ROMIMOT_GetCrc(const char *TableName)
     status = CFE_TBL_GetInfo(&TblInfoPtr, TableName);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMIMOT: Error Getting Table Info");
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Getting Table Info");
     }
     else
     {
         Crc = TblInfoPtr.Crc;
-        CFE_ES_WriteToSysLog("ROMIMOT: CRC: 0x%08lX\n\n", (unsigned long)Crc);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: CRC: 0x%08lX\n\n", (unsigned long)Crc);
     }
 }

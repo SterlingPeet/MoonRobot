@@ -19,7 +19,7 @@
 /**
  * @file
  *
- * Define sample app table
+ * Define romimot table
  */
 
 #ifndef ROMIMOT_TABLE_H

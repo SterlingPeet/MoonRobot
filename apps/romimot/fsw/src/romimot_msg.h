@@ -19,14 +19,14 @@
 /**
  * @file
  *
- * Define SAMPLE App  Messages and info
+ * Define ROMIMOT Messages and info
  */
 
 #ifndef ROMIMOT_MSG_H
 #define ROMIMOT_MSG_H
 
 /*
-** SAMPLE App command codes
+** ROMIMOT command codes
 */
 #define ROMIMOT_NOOP_CC           0
 #define ROMIMOT_RESET_COUNTERS_CC 1
@@ -74,7 +74,7 @@ typedef ROMIMOT_MotCmd_t ROMIMOT_SetTargetDeltaCmd_t;
 
 /*************************************************************************/
 /*
-** Type definition (SAMPLE App housekeeping)
+** Type definition (ROMI Motor Driver App housekeeping)
 */
 
 typedef struct

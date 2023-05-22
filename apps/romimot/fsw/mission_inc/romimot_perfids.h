@@ -19,7 +19,7 @@
 /**
  * @file
  *
- * Define Sample App Performance IDs
+ * Define ROMI Motor Driver App Performance IDs
  */
 
 #ifndef ROMIMOT_PERFIDS_H

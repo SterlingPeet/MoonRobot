@@ -19,9 +19,9 @@
 /**
  * @file
  *
- * Define Sample App Message IDs
+ * Define ROMI Motor Driver App Message IDs
  *
- * \note The Sample App assumes default configuration which uses V1 of message id implementation
+ * \note The ROMI Motor Driver App assumes default configuration which uses V1 of message id implementation
  */
 
 #ifndef ROMIMOT_MSGIDS_H

@@ -19,7 +19,7 @@
 /**
  * @file
  *
- *  The Sample App header file containing version information
+ *  The ROMI Motor Driver App header file containing version information
  */
 
 #ifndef ROMIMOT_VERSION_H
@@ -27,14 +27,14 @@
 
 /* Development Build Macro Definitions */
 
-#define ROMIMOT_BUILD_NUMBER 39 /*!< Development Build: Number of commits since baseline */
+#define ROMIMOT_BUILD_NUMBER 1 /*!< Development Build: Number of commits since baseline */
 #define ROMIMOT_BUILD_BASELINE \
-    "v1.3.0-rc4" /*!< Development Build: git tag that is the base for the current development */
+    "v0.1.99" /*!< Development Build: git tag that is the base for the current development */
 
 /*
  * Version Macros, see \ref cfsversions for definitions.
  */
-#define ROMIMOT_MAJOR_VERSION 1  /*!< @brief Major version number. */
+#define ROMIMOT_MAJOR_VERSION 0  /*!< @brief Major version number. */
 #define ROMIMOT_MINOR_VERSION 1  /*!< @brief Minor version number. */
 #define ROMIMOT_REVISION      99 /*!< @brief Revision version number. Value of 99 indicates a development version.*/
 
@@ -62,7 +62,7 @@
  * official version. @n See @ref cfsversions for format differences between development and release versions.
  */
 #define ROMIMOT_VERSION_STRING                       \
-    " Sample App DEVELOPMENT BUILD " ROMIMOT_VERSION \
-    ", Last Official Release: v1.1.0" /* For full support please use this version */
+    " ROMI Motor Driver App DEVELOPMENT BUILD " ROMIMOT_VERSION \
+    ", Last Official Release: v0.1.99" /* For full support please use this version */
 
 #endif /* ROMIMOT_VERSION_H */

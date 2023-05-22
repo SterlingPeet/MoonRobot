@@ -19,7 +19,7 @@
 /**
  * @file
  *
- * Main header file for the SAMPLE application
+ * Main header file for the ROMI Motor Driver application
  */
 
 #ifndef ROMIMOT_H

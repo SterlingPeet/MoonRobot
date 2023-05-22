@@ -19,7 +19,7 @@
 /**
  * @file
  *
- * Define SAMPLE App Events IDs
+ * Define ROMI Motor Driver App Events IDs
  */
 
 #ifndef ROMIMOT_EVENTS_H
