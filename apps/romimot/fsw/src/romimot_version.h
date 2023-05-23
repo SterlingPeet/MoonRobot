@@ -28,8 +28,9 @@
 /* Development Build Macro Definitions */
 
 #define ROMIMOT_BUILD_NUMBER 1 /*!< Development Build: Number of commits since baseline */
-#define ROMIMOT_BUILD_BASELINE \
-    "v0.1.99" /*!< Development Build: git tag that is the base for the current development */
+#define ROMIMOT_BUILD_BASELINE                                                             \
+    "v0.1.99" /*!< Development Build: git tag that is the base for the current development \
+               */
 
 /*
  * Version Macros, see \ref cfsversions for definitions.
@@ -48,8 +49,7 @@
 #define ROMIMOT_MISSION_REV 0xFF
 
 #define ROMIMOT_STR_HELPER(x) #x /*!< @brief Helper function to concatenate strings from integer macros */
-#define ROMIMOT_STR(x) \
-    ROMIMOT_STR_HELPER(x) /*!< @brief Helper function to concatenate strings from integer macros */
+#define ROMIMOT_STR(x)        ROMIMOT_STR_HELPER(x) /*!< @brief Helper function to concatenate strings from integer macros */
 
 /*! @brief Development Build Version Number.
  * @details Baseline git tag + Number of commits since baseline. @n
@@ -61,7 +61,7 @@
  * @details Reports the current development build's baseline, number, and name. Also includes a note about the latest
  * official version. @n See @ref cfsversions for format differences between development and release versions.
  */
-#define ROMIMOT_VERSION_STRING                       \
+#define ROMIMOT_VERSION_STRING                                  \
     " ROMI Motor Driver App DEVELOPMENT BUILD " ROMIMOT_VERSION \
     ", Last Official Release: v0.1.99" /* For full support please use this version */
 

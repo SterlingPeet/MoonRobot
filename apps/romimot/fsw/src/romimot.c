@@ -30,7 +30,6 @@
 #include "romimot_hw.h"
 #include "romimot_table.h"
 
-
 #include <string.h>
 
 #include <sys/ioctl.h>
@@ -120,13 +119,13 @@ int32 ROMIMOT_Init(void)
 
     ROMIMOT_Data.MotorsEnabled = 0;
 
-    ROMIMOT_Data.TargetPosLeft = 0;
+    ROMIMOT_Data.TargetPosLeft  = 0;
     ROMIMOT_Data.TargetPosRight = 0;
 
     /*
      * Amount to increment/decrement the target to make the wheel turn at constant speed.
      */
-    ROMIMOT_Data.TargetDeltaLeft = 0;
+    ROMIMOT_Data.TargetDeltaLeft  = 0;
     ROMIMOT_Data.TargetDeltaRight = 0;
 
     /*
@@ -175,7 +174,8 @@ int32 ROMIMOT_Init(void)
     status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(ROMIMOT_SEND_HK_MID), ROMIMOT_Data.CommandPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Subscribing to HK request, RC = 0x%08lX\n", (unsigned long)status);
+        CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Subscribing to HK request, RC = 0x%08lX\n",
+                             (unsigned long)status);
         return status;
     }
 
@@ -204,8 +204,8 @@ int32 ROMIMOT_Init(void)
     /*
     ** Register Table(s)
     */
-    status = CFE_TBL_Register(&ROMIMOT_Data.TblHandles[0], "RomimotTable", sizeof(ROMIMOT_Table_t),
-                              CFE_TBL_OPT_DEFAULT, ROMIMOT_TblValidationFunc);
+    status = CFE_TBL_Register(&ROMIMOT_Data.TblHandles[0], "RomimotTable", sizeof(ROMIMOT_Table_t), CFE_TBL_OPT_DEFAULT,
+                              ROMIMOT_TblValidationFunc);
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("ROMI Motor Driver App: Error Registering Table, RC = 0x%08lX\n", (unsigned long)status);
@@ -220,29 +220,28 @@ int32 ROMIMOT_Init(void)
     CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT Initialized.%s",
                       ROMIMOT_VERSION_STRING);
 
-
-    //setup I2C
+    // setup I2C
 
     char busname[20];
     snprintf(busname, 20, "/dev/i2c-%d", i2cBusNumber);
     ROMIMOT_Data.i2cfd = open_i2c_device(busname);
 
-    if (ROMIMOT_Data.i2cfd < 0) {
+    if (ROMIMOT_Data.i2cfd < 0)
+    {
         CFE_ES_WriteToSysLog("failed to open I2C bus %20s", busname);
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
-
-    if (ioctl(ROMIMOT_Data.i2cfd, I2C_SLAVE, romiaddr) < 0) {
+    if (ioctl(ROMIMOT_Data.i2cfd, I2C_SLAVE, romiaddr) < 0)
+    {
         CFE_ES_WriteToSysLog("failed to select romi I2C device");
         return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
     }
 
     // grab the current encoder positions as the current target positions
-    struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
-    ROMIMOT_Data.TargetPosLeft = encVals.left;
+    struct MotorPair encVals    = romiEncoderRead(ROMIMOT_Data.i2cfd);
+    ROMIMOT_Data.TargetPosLeft  = encVals.left;
     ROMIMOT_Data.TargetPosRight = encVals.right;
-
 
     return CFE_SUCCESS;
 }
@@ -292,7 +291,8 @@ void ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr)
 
     CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &CommandCode);
 
-    CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT Process Ground Command called with CommandCode %x", CommandCode);
+    CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "ROMIMOT Process Ground Command called with CommandCode %x", CommandCode);
 
     /*
     ** Process "known" ROMIMOT ground commands
@@ -352,8 +352,8 @@ void ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr)
 
         /* default case already found during FC vs length test */
         default:
-            CFE_EVS_SendEvent(ROMIMOT_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "Invalid ground command code: CC = %d", CommandCode);
+            CFE_EVS_SendEvent(ROMIMOT_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
+                              CommandCode);
             break;
     }
 }
@@ -393,11 +393,10 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
     return CFE_SUCCESS;
 }
 
-
 int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 {
     ROMIMOT_Data.CmdCounter++;
-    //CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
+    // CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
     uint8_t buf[4];
 
     // Read the buttons on the ROMI, emit an event if pressed.
@@ -409,17 +408,17 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 
     // Read the battery voltage on the ROMI, store it in the HK struct.
     romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
-    //printf("bat was %d\n", ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
+    // printf("bat was %d\n", ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
 
     float pcoeff = -0.05;
 
     // Read the motor encoders
-    struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
-    ROMIMOT_Data.HkTlm.Payload.LeftMotorEncoder = encVals.left;
+    struct MotorPair encVals                     = romiEncoderRead(ROMIMOT_Data.i2cfd);
+    ROMIMOT_Data.HkTlm.Payload.LeftMotorEncoder  = encVals.left;
     ROMIMOT_Data.HkTlm.Payload.RightMotorEncoder = encVals.right;
     // // motVals.left =  (int)(encVals.left * pcoeff);
     // // motVals.right = (int)(encVals.right * pcoeff);
-    uint16_t left = (int)((encVals.left - ROMIMOT_Data.TargetPosLeft ) * pcoeff);
+    uint16_t left  = (int)((encVals.left - ROMIMOT_Data.TargetPosLeft) * pcoeff);
     uint16_t right = (int)((encVals.right - ROMIMOT_Data.TargetPosRight) * pcoeff);
     if (ROMIMOT_Data.MotorsEnabled)
     {
@@ -431,20 +430,19 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         // but if we're close to rollover, we'll swap direction
         if (encVals.left > 10000)
         {
-            ROMIMOT_Data.TargetDeltaLeft = 0;
+            ROMIMOT_Data.TargetDeltaLeft  = 0;
             ROMIMOT_Data.TargetDeltaRight = 0;
         }
         else if (encVals.left < -10000)
         {
-            ROMIMOT_Data.TargetDeltaLeft = 0;
+            ROMIMOT_Data.TargetDeltaLeft  = 0;
             ROMIMOT_Data.TargetDeltaRight = 0;
         }
-
-    } else
+    }
+    else
     {
         romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
     }
-
 
     return CFE_SUCCESS;
 }
@@ -488,9 +486,9 @@ int32 ROMIMOT_ResetCounters(const ROMIMOT_ResetCountersCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 int32 ROMIMOT_Process(const ROMIMOT_ProcessCmd_t *Msg)
 {
-    int32               status;
+    int32            status;
     ROMIMOT_Table_t *TblPtr;
-    const char *        TableName = "ROMIMOT.RomimotTable";
+    const char      *TableName = "ROMIMOT.RomimotTable";
 
     /* ROMI Motor Driver Use of Table */
 
@@ -513,8 +511,6 @@ int32 ROMIMOT_Process(const ROMIMOT_ProcessCmd_t *Msg)
         return status;
     }
 
-
-
     return CFE_SUCCESS;
 }
 
@@ -522,33 +518,32 @@ int32 ROMIMOT_SetMotEnable(const ROMIMOT_SetEnableCmd_t *Msg, uint8_t enable)
 {
     ROMIMOT_Data.MotorsEnabled = enable;
 
-    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Enable command: %d", enable);
+    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Enable command: %d",
+                      enable);
 
     return CFE_SUCCESS;
 }
 int32 ROMIMOT_SetTarget(const ROMIMOT_SetTargetCmd_t *Msg)
 {
-    ROMIMOT_Data.TargetPosLeft = Msg->cmdMotLeft;
+    ROMIMOT_Data.TargetPosLeft  = Msg->cmdMotLeft;
     ROMIMOT_Data.TargetPosRight = Msg->cmdMotRight;
 
-    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Target Set : %d %d", ROMIMOT_Data.TargetPosLeft, ROMIMOT_Data.TargetPosRight);
+    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Target Set : %d %d",
+                      ROMIMOT_Data.TargetPosLeft, ROMIMOT_Data.TargetPosRight);
 
     return CFE_SUCCESS;
 }
 int32 ROMIMOT_SetTargetDelta(const ROMIMOT_SetTargetDeltaCmd_t *Msg)
 {
-    ROMIMOT_Data.TargetDeltaLeft = Msg->cmdMotLeft;
+    ROMIMOT_Data.TargetDeltaLeft  = Msg->cmdMotLeft;
     ROMIMOT_Data.TargetDeltaRight = Msg->cmdMotRight;
 
-    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Target Delta Set : %d %d", ROMIMOT_Data.TargetDeltaLeft, ROMIMOT_Data.TargetDeltaRight);
-
+    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "ROMIMOT: Motor Target Delta Set : %d %d", ROMIMOT_Data.TargetDeltaLeft,
+                      ROMIMOT_Data.TargetDeltaRight);
 
     return CFE_SUCCESS;
 }
-
-
-
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
@@ -592,7 +587,7 @@ bool ROMIMOT_VerifyCmdLength(CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 int32 ROMIMOT_TblValidationFunc(void *TblData)
 {
-    int32               ReturnCode = CFE_SUCCESS;
+    int32            ReturnCode = CFE_SUCCESS;
     ROMIMOT_Table_t *TblDataPtr = (ROMIMOT_Table_t *)TblData;
 
     /*

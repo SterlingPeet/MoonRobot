@@ -62,7 +62,7 @@ typedef struct
     ** Command interface counters...
     */
     uint16 CmdCounter;
-    uint8 ErrCounter;
+    uint8  ErrCounter;
 
     /*
     ** Housekeeping telemetry packet...
