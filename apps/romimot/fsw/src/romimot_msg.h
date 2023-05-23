@@ -81,9 +81,12 @@ typedef struct
     uint16 CommandCounter;
     uint8  CommandErrorCounter;
     uint8  I2CErrorCounter;
-    int16  LeftMotorEncoder;
-    int16  RightMotorEncoder;
     uint16 BatteryMillivolts;
+    uint8  MotorsEnabled;
+    int16  RawLeftMotorEncoder;
+    int16  RawRightMotorEncoder;
+    int32  LeftMotorOdometer;
+    int32  RightMotorOdometer;
 } ROMIMOT_HkTlm_Payload_t;
 
 typedef struct

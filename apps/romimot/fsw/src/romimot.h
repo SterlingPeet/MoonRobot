@@ -75,9 +75,32 @@ typedef struct
     uint32 RunStatus;
 
     /*
+    ** Battery voltage expressed in millivolts
+    */
+    uint16 BatteryMillivolts;
+
+    /*
      * Are the motors enabled
      */
-    uint8_t MotorsEnabled;
+    uint8 MotorsEnabled;
+
+    /*
+    ** Raw wheel encoder values, stored for next encoder delta calculation
+    */
+    int16 RawLeftEncoder;
+    int16 RawRightEncoder;
+
+    /*
+    ** Change in encoder values since the last reading
+    */
+    int16 LeftEncoderDelta;
+    int16 RightEncoderDelta;
+
+    /*
+    ** Absolute position of each motor since ROMIMOT app started
+    */
+    uint32 LeftOdo;
+    uint32 RightOdo;
 
     /*
      * target positions to drive the motors towards

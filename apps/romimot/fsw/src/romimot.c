@@ -117,7 +117,18 @@ int32 ROMIMOT_Init(void)
 
     ROMIMOT_Data.RunStatus = CFE_ES_RunStatus_APP_RUN;
 
+    ROMIMOT_Data.BatteryMillivolts = 0;
+
     ROMIMOT_Data.MotorsEnabled = 0;
+
+    ROMIMOT_Data.RawLeftEncoder  = 0;
+    ROMIMOT_Data.RawRightEncoder = 0;
+
+    ROMIMOT_Data.LeftEncoderDelta = 0;
+    ROMIMOT_Data.LeftEncoderDelta = 0;
+
+    ROMIMOT_Data.LeftOdo  = 0;
+    ROMIMOT_Data.RightOdo = 0;
 
     ROMIMOT_Data.TargetPosLeft  = 0;
     ROMIMOT_Data.TargetPosRight = 0;
@@ -373,8 +384,14 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
     /*
     ** Get command execution counters...
     */
-    ROMIMOT_Data.HkTlm.Payload.CommandErrorCounter = ROMIMOT_Data.ErrCounter;
-    ROMIMOT_Data.HkTlm.Payload.CommandCounter      = ROMIMOT_Data.CmdCounter;
+    ROMIMOT_Data.HkTlm.Payload.CommandErrorCounter  = ROMIMOT_Data.ErrCounter;
+    ROMIMOT_Data.HkTlm.Payload.CommandCounter       = ROMIMOT_Data.CmdCounter;
+    ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts    = ROMIMOT_Data.BatteryMillivolts;
+    ROMIMOT_Data.HkTlm.Payload.MotorsEnabled        = ROMIMOT_Data.MotorsEnabled;
+    ROMIMOT_Data.HkTlm.Payload.RawLeftMotorEncoder  = ROMIMOT_Data.RawLeftEncoder;
+    ROMIMOT_Data.HkTlm.Payload.RawRightMotorEncoder = ROMIMOT_Data.RawRightEncoder;
+    ROMIMOT_Data.HkTlm.Payload.LeftMotorOdometer    = ROMIMOT_Data.LeftOdo;
+    ROMIMOT_Data.HkTlm.Payload.RightMotorOdometer   = ROMIMOT_Data.RightOdo;
 
     /*
     ** Send housekeeping telemetry packet...
@@ -406,16 +423,22 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
     }
 
-    // Read the battery voltage on the ROMI, store it in the HK struct.
-    romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
-    // printf("bat was %d\n", ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts);
+    // Read the battery voltage on the ROMI, store it in the data struct.
+    romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
 
     float pcoeff = -0.05;
 
     // Read the motor encoders
-    struct MotorPair encVals                     = romiEncoderRead(ROMIMOT_Data.i2cfd);
-    ROMIMOT_Data.HkTlm.Payload.LeftMotorEncoder  = encVals.left;
-    ROMIMOT_Data.HkTlm.Payload.RightMotorEncoder = encVals.right;
+    struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
+
+    ROMIMOT_Data.LeftEncoderDelta  = encVals.left - ROMIMOT_Data.RawLeftEncoder;
+    ROMIMOT_Data.RightEncoderDelta = encVals.right - ROMIMOT_Data.RawRightEncoder;
+    ROMIMOT_Data.RawLeftEncoder    = encVals.left;
+    ROMIMOT_Data.RawRightEncoder   = encVals.right;
+
+    ROMIMOT_Data.LeftOdo += ROMIMOT_Data.LeftEncoderDelta;
+    ROMIMOT_Data.RightOdo += ROMIMOT_Data.RightEncoderDelta;
+
     // // motVals.left =  (int)(encVals.left * pcoeff);
     // // motVals.right = (int)(encVals.right * pcoeff);
     uint16_t left  = (int)((encVals.left - ROMIMOT_Data.TargetPosLeft) * pcoeff);
