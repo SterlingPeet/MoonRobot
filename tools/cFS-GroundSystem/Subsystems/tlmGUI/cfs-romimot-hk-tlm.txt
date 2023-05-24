@@ -18,9 +18,9 @@
 Command Counter,         12,  2,  H, Dec, NULL,        NULL,        NULL,       NULL
 Error Counter,           14,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
 I2C Error Counter,       15,  1,  B, Dec, NULL,        NULL,        NULL,       NULL
-Battery Millivolts,      16,  2,  H, Dec, NULL,        NULL,        NULL,       NULL
-Motors Enabled,          18,  1,  B, Enm, Disabled,    Enabled,     NULL,       NULL
-Left Motor Raw Encoder,  19,  2,  h, Dec, NULL,        NULL,        NULL,       NULL
-Right Motor Raw Encoder, 21,  2,  h, Dec, NULL,        NULL,        NULL,       NULL
-Left Motor Odometer,     23,  4,  i, Dec, NULL,        NULL,        NULL,       NULL
-Right Motor Odometer,    27,  4,  i, Dec, NULL,        NULL,        NULL,       NULL
+Motors Enabled,          16,  1,  B, Enm, Disabled,    Enabled,     NULL,       NULL
+Battery Millivolts,      18,  2,  H, Dec, NULL,        NULL,        NULL,       NULL
+Left Motor Raw Encoder,  20,  2,  h, Dec, NULL,        NULL,        NULL,       NULL
+Right Motor Raw Encoder, 22,  2,  h, Dec, NULL,        NULL,        NULL,       NULL
+Left Motor Odometer,     24,  4,  i, Dec, NULL,        NULL,        NULL,       NULL
+Right Motor Odometer,    28,  4,  i, Dec, NULL,        NULL,        NULL,       NULL

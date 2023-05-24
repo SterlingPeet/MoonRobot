@@ -81,8 +81,9 @@ typedef struct __attribute__((__packed__))
     uint16 CommandCounter;
     uint8  CommandErrorCounter;
     uint8  I2CErrorCounter;
-    uint16 BatteryMillivolts;
     uint8  MotorsEnabled;
+    uint8  Reserved0;
+    uint16 BatteryMillivolts;
     int16  RawLeftMotorEncoder;
     int16  RawRightMotorEncoder;
     int32  LeftMotorOdometer;
