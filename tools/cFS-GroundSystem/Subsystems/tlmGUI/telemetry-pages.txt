@@ -17,6 +17,7 @@ SB HK Tlm,                 GenericTelemetry.py,     0x803,   cfe-sb-hk-tlm.txt
 TBL HK Tlm,                GenericTelemetry.py,     0x804,   cfe-tbl-hk-tlm.txt
 TIME HK Tlm,               GenericTelemetry.py,     0x805,   cfe-time-hk-tlm.txt
 ROMIMOT HK Tlm,            GenericTelemetry.py,     0x893,   cfs-romimot-hk-tlm.txt
+DDFK HK Tlm,               GenericTelemetry.py,     0x898,   cfs-ddfk-hk-tlm.txt
 TIME DIAG Tlm 1,           GenericTelemetry.py,     0x806,   cfe-time-diag-tlm1.txt
 TIME DIAG Tlm 2,           GenericTelemetry.py,     0x806,   cfe-time-diag-tlm2.txt
 SB STATs Tlm,              GenericTelemetry.py,     0x80A,   cfe-sb-stats-tlm.txt

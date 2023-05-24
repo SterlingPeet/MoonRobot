@@ -59,6 +59,10 @@
 #include "romimot_msgids.h"
 #endif
 
+#ifdef HAVE_DDFK
+#include "ddfk_app_msgids.h"
+#endif
+
 /*
 ** SCH Lab schedule table
 ** When populating this table:
@@ -104,6 +108,10 @@ SCH_LAB_ScheduleTable_t SCH_TBL_Structure = {
 #ifdef HAVE_ROMIMOT
         {CFE_SB_MSGID_WRAP_VALUE(ROMIMOT_SEND_HK_MID), 40, 0},
         {CFE_SB_MSGID_WRAP_VALUE(ROMIMOT_WAKEUP_MID), 1, 0}, /* 10 Hz for romi motor control */
+#endif
+#ifdef HAVE_DDFK
+        {CFE_SB_MSGID_WRAP_VALUE(DDFK_APP_SEND_HK_MID), 40, 0},
+        {CFE_SB_MSGID_WRAP_VALUE(DDFK_APP_WAKEUP_MID), 1, 0},
 #endif
     }};
 

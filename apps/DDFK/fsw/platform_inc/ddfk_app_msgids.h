@@ -31,6 +31,7 @@
 /* V1 Command Message IDs must be 0x18xx */
 #define DDFK_APP_CMD_MID     0x1898
 #define DDFK_APP_SEND_HK_MID 0x1899
+#define DDFK_APP_WAKEUP_MID  0x18A0
 /* V1 Telemetry Message IDs must be 0x08xx */
 #define DDFK_APP_HK_TLM_MID 0x0898
 

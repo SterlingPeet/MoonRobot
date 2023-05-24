@@ -1,14 +1,14 @@
 project(CFE_DDFK_APP C)
 
 # Create the app module
-add_cfe_app(ddfk_app fsw/src/ddfk_app.c)
+add_cfe_app(ddfk fsw/src/ddfk_app.c)
 
 
 
 # Add table
-add_cfe_tables(ddfk_app fsw/tables/ddfk_app_tbl.c)
+add_cfe_tables(ddfk fsw/tables/ddfk_app_tbl.c)
 
-target_include_directories(ddfk_app PUBLIC
+target_include_directories(ddfk PUBLIC
   fsw/mission_inc
   fsw/platform_inc
 )
