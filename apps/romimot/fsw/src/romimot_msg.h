@@ -76,7 +76,7 @@ typedef ROMIMOT_MotCmd_t ROMIMOT_SetTargetDeltaCmd_t;
 ** Type definition (ROMI Motor Driver App housekeeping)
 */
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint16 CommandCounter;
     uint8  CommandErrorCounter;
@@ -94,5 +94,26 @@ typedef struct
     CFE_MSG_TelemetryHeader_t TelemetryHeader; /**< \brief Telemetry header */
     ROMIMOT_HkTlm_Payload_t   Payload;         /**< \brief Telemetry payload */
 } ROMIMOT_HkTlm_t;
+
+/*
+** Type definition (ROMI Motor Driver App Process Telemetry and state)
+*/
+
+typedef struct
+{
+    uint8 MotorsEnabled;
+    int16 LeftPower;
+    int16 RightPower;
+    int16 LeftEncoderDelta;
+    int16 RightEncoderDelta;
+    int32 LeftMotorOdometer;
+    int32 RightMotorOdometer;
+} ROMIMOT_MotorStateData_t;
+
+typedef struct
+{
+    CFE_MSG_TelemetryHeader_t TelemetryHeader;
+    ROMIMOT_MotorStateData_t  Payload;
+} ROMIMOT_MotorState_t;
 
 #endif /* ROMIMOT_MSG_H */

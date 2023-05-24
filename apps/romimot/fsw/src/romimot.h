@@ -70,6 +70,11 @@ typedef struct
     ROMIMOT_HkTlm_t HkTlm;
 
     /*
+    ** State output packet...
+    */
+    ROMIMOT_MotorState_t MotState;
+
+    /*
     ** Run Status variable used in the main processing loop
     */
     uint32 RunStatus;
@@ -103,10 +108,10 @@ typedef struct
     uint32 RightOdo;
 
     /*
-     * target positions to drive the motors towards
+     * Motor speed settings
      */
-    int16_t TargetPosLeft;
-    int16_t TargetPosRight;
+    int16 LeftMotSpeed;
+    int16 RightMotSpeed;
 
     /*
      * amount to increment/decrement the target to make the wheel turn at constant speed.
