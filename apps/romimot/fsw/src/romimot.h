@@ -108,6 +108,12 @@ typedef struct
     uint32 RightOdo;
 
     /*
+    ** Odometer targets
+    */
+    uint32 LeftOdoTrgt;
+    uint32 RightOdoTrgt;
+
+    /*
      * Motor speed settings
      */
     int16 LeftMotSpeed;

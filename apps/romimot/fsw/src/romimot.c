@@ -133,6 +133,9 @@ int32 ROMIMOT_Init(void)
     ROMIMOT_Data.LeftMotSpeed  = 0;
     ROMIMOT_Data.RightMotSpeed = 0;
 
+    ROMIMOT_Data.LeftOdoTrgt  = 0;
+    ROMIMOT_Data.RightOdoTrgt = 0;
+
     /*
      * Amount to increment/decrement the target to make the wheel turn at constant speed.
      */
@@ -427,20 +430,20 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
     // Read the battery voltage on the ROMI, store it in the data struct.
     romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
 
-    // float pcoeff = -0.05;
+    float pcoeff = -0.05;
 
     // Read the motor encoders
     struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
 
-    // Write the current motor speed
-    if (ROMIMOT_Data.MotorsEnabled)
-    {
-        romiMotorWrite(ROMIMOT_Data.i2cfd, ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
-    }
-    else
-    {
-        romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
-    }
+    // // Write the current motor speed
+    // if (ROMIMOT_Data.MotorsEnabled)
+    // {
+    //     romiMotorWrite(ROMIMOT_Data.i2cfd, ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
+    // }
+    // else
+    // {
+    //     romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+    // }
 
     ROMIMOT_Data.LeftEncoderDelta  = encVals.left - ROMIMOT_Data.RawLeftEncoder;
     ROMIMOT_Data.RightEncoderDelta = encVals.right - ROMIMOT_Data.RawRightEncoder;
@@ -464,33 +467,33 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
     CFE_SB_TimeStampMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader));
     CFE_SB_TransmitMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader), true);
 
-    // // motVals.left =  (int)(encVals.left * pcoeff);
-    // // motVals.right = (int)(encVals.right * pcoeff);
-    // uint16_t left  = (int)((encVals.left - ROMIMOT_Data.TargetPosLeft) * pcoeff);
-    // uint16_t right = (int)((encVals.right - ROMIMOT_Data.TargetPosRight) * pcoeff);
-    // if (ROMIMOT_Data.MotorsEnabled)
-    // {
-    //     //romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
+    // motVals.left =  (int)(encVals.left * pcoeff);
+    // motVals.right = (int)(encVals.right * pcoeff);
+    uint16_t left  = (int)((ROMIMOT_Data.LeftOdo - ROMIMOT_Data.LeftOdoTrgt) * pcoeff);
+    uint16_t right = (int)((ROMIMOT_Data.RightOdo - ROMIMOT_Data.RightOdoTrgt) * pcoeff);
+    if (ROMIMOT_Data.MotorsEnabled)
+    {
+        romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
 
-    //     // we'll advance our target position by the delta
-    //     ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
-    //     ROMIMOT_Data.TargetPosRight += ROMIMOT_Data.TargetDeltaRight;
-    //     // but if we're close to rollover, we'll swap direction
-    //     if (encVals.left > 10000)
-    //     {
-    //         ROMIMOT_Data.TargetDeltaLeft  = 0;
-    //         ROMIMOT_Data.TargetDeltaRight = 0;
-    //     }
-    //     else if (encVals.left < -10000)
-    //     {
-    //         ROMIMOT_Data.TargetDeltaLeft  = 0;
-    //         ROMIMOT_Data.TargetDeltaRight = 0;
-    //     }
-    // }
-    // else
-    // {
-    //     romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
-    // }
+        // we'll advance our target position by the delta
+        // ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
+        // ROMIMOT_Data.TargetPosRight += ROMIMOT_Data.TargetDeltaRight;
+        // but if we're close to rollover, we'll swap direction
+        if (encVals.left > 10000)
+        {
+            ROMIMOT_Data.TargetDeltaLeft  = 0;
+            ROMIMOT_Data.TargetDeltaRight = 0;
+        }
+        else if (encVals.left < -10000)
+        {
+            ROMIMOT_Data.TargetDeltaLeft  = 0;
+            ROMIMOT_Data.TargetDeltaRight = 0;
+        }
+    }
+    else
+    {
+        romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+    }
 
     return CFE_SUCCESS;
 }
@@ -573,10 +576,10 @@ int32 ROMIMOT_SetMotEnable(const ROMIMOT_SetEnableCmd_t *Msg, uint8_t enable)
 }
 int32 ROMIMOT_SetTarget(const ROMIMOT_SetTargetCmd_t *Msg)
 {
-    ROMIMOT_Data.LeftMotSpeed  = Msg->cmdMotLeft;
-    ROMIMOT_Data.RightMotSpeed = Msg->cmdMotRight;
+    ROMIMOT_Data.LeftOdoTrgt += Msg->cmdMotLeft;
+    ROMIMOT_Data.RightOdoTrgt += Msg->cmdMotRight;
 
-    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Speed Set : %d %d",
+    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Target Set : %d %d",
                       ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
 
     return CFE_SUCCESS;
