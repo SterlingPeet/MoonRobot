@@ -15,3 +15,19 @@ Using the cFS paradigm, everything is corraled into apps, stored within the apps
 There is only one demo app, due to time constraints for building multiple apps in time for the live demo.
 
 <!--- Explain each app in use with bullet points --->
+
+## Building the cFS Project
+
+Some effort was put into attempting to run a native ``cmake`` build, but as of currently it does not work.  The cFE build system calls ``cmake`` from within ``make`` from within ``cmake``, which seems to break some core assumptions about how build folders are laid out.  In effort to make the build process simple, we have included the sample ``Makefile`` in the root folder, to remove the extra step of copying it around.
+
+To build the project on the Raspberry Pi, or a suitably compatible ARM build host, run the following commands:
+
+    make SIMULATION=native prep
+    make
+    make install
+
+This will result in a build folder, where the necessary artifacts are located in:
+
+    ./build/exe/cpu1/
+
+If you have built locally on the Pi, you can ``cd`` into this directory and run the cFS executable ``./core-cpu1``.  If you built on a build host, you must copy everything within the ``cpu1`` folder to the Pi, and then execute on the Pi.
