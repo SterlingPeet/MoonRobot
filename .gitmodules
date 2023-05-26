@@ -18,7 +18,3 @@
 	path = tools/tblCRCTool
 	url = https://github.com/nasa/tblCRCTool.git
   branch = main
-[submodule "tools/gen_app_code"]
-	path = tools/gen_app_code
-	url = https://github.com/SterlingPeet/gen_app_code
-  branch = main
