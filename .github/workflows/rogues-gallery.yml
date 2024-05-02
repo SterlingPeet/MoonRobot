@@ -1,0 +1,48 @@
+name: Rogues Gallery CI for Arm/RISC-V
+
+on:
+  push:
+    branches:
+      - main
+  # and on all pull requests to the main branch
+  pull_request:
+    branches:
+      - main
+  # as well as upon manual triggers through the 'Actions' tab of the Github UI
+  workflow_dispatch:
+  schedule:
+  - cron: '30 6 * * 2'
+
+env:
+  SIMULATION: native
+  OMIT_DEPRECATED: true
+  ENABLE_UNIT_TESTS: true
+  CTEST_OUTPUT_ON_FAILURE: true
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  build-via-slurm:
+    name: Testing ${{matrix.os}} on Rogues Gallery
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [slurm-arm, slurm-riscv]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Run slurm batch file
+      working-directory: ${{ github.workspace }}/slurm
+      shell: bash
+      run: |
+        sleep 5
+        chmod +x ${{matrix.os}}.sh && sbatch ${{matrix.os}}.sh
+    - name: Read slurm job output
+      if: always()
+      working-directory: ${{ github.workspace }}/slurm
+      shell: bash
+      run: |
+        sleep 5
+        cat ${{matrix.os}}.out
