@@ -6,4 +6,4 @@ on:
 jobs:
   static-analysis:
     name: Static Analysis
-    uses: nasa/cFS/.github/workflows/static-analysis.yml@main
+    uses: SterlingPeet/MoonRobot/.github/workflows/static-analysis.yml@main

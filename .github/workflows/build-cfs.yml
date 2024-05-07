@@ -1,9 +1,10 @@
-name: Build, Test, and Run [OMIT_DEPRECATED = true]
+name: Build, Test, and Run cFS
 
 # Run every time a new commit pushed or for pull requests
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 env:
   SIMULATION: native
@@ -50,14 +51,14 @@ jobs:
     steps:
       - name: Cache Source and Build
         id: cache-src-bld
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: build-${{ github.run_number }}-${{ matrix.buildtype }}
 
       - name: Checkout cFS
         if: steps.cache-src-bld.outputs.cache-hit != 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -66,8 +67,8 @@ jobs:
 
       - name: Copy Makefile
         run: |
-          cp ./cfe/cmake/Makefile.sample Makefile
-          cp -r ./cfe/cmake/sample_defs sample_defs
+          ls -l
+
       - name: Prep Build
         run: make prep
 
@@ -95,7 +96,7 @@ jobs:
 
       - name: Cache Source and Build
         id: cache-src-bld
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: build-${{ github.run_number }}-${{ matrix.buildtype }}
@@ -123,7 +124,7 @@ jobs:
     steps:
       - name: Cache Source and Build
         id: cache-src-bld
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: build-${{ github.run_number }}-${{ matrix.buildtype }}
@@ -140,7 +141,7 @@ jobs:
         working-directory: ./build/exe/cpu1/
 
       - name: Archive cFS Startup Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cFS-startup-log-omit-deprecate-true-${{ matrix.buildtype }}
           path: ./build/exe/cpu1/cFS_startup_cpu1.txt
@@ -169,7 +170,7 @@ jobs:
     steps:
       - name: Cache Source and Build
         id: cache-src-bld
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: build-${{ github.run_number }}-${{ matrix.buildtype }}
@@ -196,14 +197,14 @@ jobs:
             fi
             counter=$(grep -c "BEGIN" cf/cfe_test.tmp)
             echo "Waiting for CFE Tests"
-            sleep 60
+            sleep 120
           done
 
           ../host/cmdUtil --endian=LE --pktid=0x1806 --cmdcode=2 --half=0x0002
         working-directory: ./build/exe/cpu1/
 
       - name: Archive cFS Startup Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cFS-functional-test-log-omit-deprecate-true-${{ matrix.buildtype }}
           path: ./build/exe/cpu1/cf/cfe_test.log
