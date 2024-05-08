@@ -26,84 +26,84 @@
 
 struct Data
 {
-  //addr 0
-  bool yellow, green, red;
-  //addr 3
-  bool buttonA, buttonB, buttonC;
-  //addr 6
-  int16_t leftMotor, rightMotor;
-  //addr 10
-  uint16_t batteryMillivolts;
-  //addr 12
-  uint16_t analog[6];
-  //addr 24
-  bool playNotes;
-  char notes[14];
-  //addr
-  int16_t leftEncoder, rightEncoder;
+    // addr 0
+    bool yellow, green, red;
+    // addr 3
+    bool buttonA, buttonB, buttonC;
+    // addr 6
+    int16_t leftMotor, rightMotor;
+    // addr 10
+    uint16_t batteryMillivolts;
+    // addr 12
+    uint16_t analog[6];
+    // addr 24
+    bool playNotes;
+    char notes[14];
+    // addr
+    int16_t leftEncoder, rightEncoder;
 };
 
-PololuRPiSlave<struct Data,5> slave;
-PololuBuzzer buzzer;
-Romi32U4Motors motors;
-Romi32U4ButtonA buttonA;
-Romi32U4ButtonB buttonB;
-Romi32U4ButtonC buttonC;
-Romi32U4Encoders encoders;
+PololuRPiSlave<struct Data, 5> slave;
+PololuBuzzer                   buzzer;
+Romi32U4Motors                 motors;
+Romi32U4ButtonA                buttonA;
+Romi32U4ButtonB                buttonB;
+Romi32U4ButtonC                buttonC;
+Romi32U4Encoders               encoders;
 
 void setup()
 {
-  // Set up the slave at I2C address 20.
-  slave.init(20);
+    // Set up the slave at I2C address 20.
+    slave.init(20);
 
-  // Play startup sound.
-  buzzer.play("v10>>g16>>>c16");
+    // Play startup sound.
+    buzzer.play("v10>>g16>>>c16");
 }
 
 void loop()
 {
-  // Call updateBuffer() before using the buffer, to get the latest
-  // data including recent master writes.
-  slave.updateBuffer();
+    // Call updateBuffer() before using the buffer, to get the latest
+    // data including recent master writes.
+    slave.updateBuffer();
 
-  // Write various values into the data structure.
-  slave.buffer.buttonA = buttonA.isPressed();
-  slave.buffer.buttonB = buttonB.isPressed();
-  slave.buffer.buttonC = buttonC.isPressed();
+    // Write various values into the data structure.
+    slave.buffer.buttonA = buttonA.isPressed();
+    slave.buffer.buttonB = buttonB.isPressed();
+    slave.buffer.buttonC = buttonC.isPressed();
 
-  // Change this to readBatteryMillivoltsLV() for the LV model.
-  slave.buffer.batteryMillivolts = readBatteryMillivolts();
+    // Change this to readBatteryMillivoltsLV() for the LV model.
+    slave.buffer.batteryMillivolts = readBatteryMillivolts();
 
-  for(uint8_t i=0; i<6; i++)
-  {
-    slave.buffer.analog[i] = analogRead(i);
-  }
+    for (uint8_t i = 0; i < 6; i++)
+    {
+        slave.buffer.analog[i] = analogRead(i);
+    }
 
-  // READING the buffer is allowed before or after finalizeWrites().
-  ledYellow(slave.buffer.yellow);
-  ledGreen(slave.buffer.green);
-  ledRed(slave.buffer.red);
-  motors.setSpeeds(slave.buffer.leftMotor, slave.buffer.rightMotor);
+    // READING the buffer is allowed before or after finalizeWrites().
+    ledYellow(slave.buffer.yellow);
+    ledGreen(slave.buffer.green);
+    ledRed(slave.buffer.red);
+    motors.setSpeeds(slave.buffer.leftMotor, slave.buffer.rightMotor);
 
-  // Playing music involves both reading and writing, since we only
-  // want to do it once.
-  static bool startedPlaying = false;
+    // Playing music involves both reading and writing, since we only
+    // want to do it once.
+    static bool startedPlaying = false;
 
-  if(slave.buffer.playNotes && !startedPlaying)
-  {
-    buzzer.play(slave.buffer.notes);
-    startedPlaying = true;
-  }
-  else if (startedPlaying && !buzzer.isPlaying())
-  {
-    slave.buffer.playNotes = false;
-    startedPlaying = false;
-  }
+    if (slave.buffer.playNotes && !startedPlaying)
+    {
+        buzzer.play(slave.buffer.notes);
+        startedPlaying = true;
+    }
+    else if (startedPlaying && !buzzer.isPlaying())
+    {
+        slave.buffer.playNotes = false;
+        startedPlaying         = false;
+    }
 
-  slave.buffer.leftEncoder = encoders.getCountsLeft();
-  slave.buffer.rightEncoder = encoders.getCountsRight();
+    slave.buffer.leftEncoder  = encoders.getCountsLeft();
+    slave.buffer.rightEncoder = encoders.getCountsRight();
 
-  // When you are done WRITING, call finalizeWrites() to make modified
-  // data available to I2C master.
-  slave.finalizeWrites();
+    // When you are done WRITING, call finalizeWrites() to make modified
+    // data available to I2C master.
+    slave.finalizeWrites();
 }
