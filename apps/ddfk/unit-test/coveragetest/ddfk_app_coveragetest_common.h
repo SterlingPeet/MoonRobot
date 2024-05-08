@@ -19,7 +19,7 @@
 /**
  * @file
  *
- * Common definitions for all DDFK coverage tests
+ * Common definitions for all ddfk coverage tests
  */
 
 #ifndef DDFK_APP_COVERAGETEST_COMMON_H

@@ -356,7 +356,7 @@ int32 DDFK_APP_Process(const DDFK_APP_ProcessCmd_t *Msg)
 {
     int32             status;
     DDFK_APP_Table_t *TblPtr;
-    const char       *TableName = "DDFK_APP.DDFKAppTable";
+    const char *      TableName = "DDFK_APP.DDFKAppTable";
 
     /* Differential Drive Forward Kinematics Use of Table */
 

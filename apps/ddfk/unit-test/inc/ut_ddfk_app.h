@@ -21,7 +21,7 @@
  *
  *
  * Purpose:
- * Extra scaffolding functions for the DDFK unit test
+ * Extra scaffolding functions for the ddfk unit test
  *
  * Notes:
  * This is an extra UT-specific extern declaration

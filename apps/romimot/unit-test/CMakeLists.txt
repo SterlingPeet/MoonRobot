@@ -34,6 +34,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 add_cfe_coverage_test(romimot ALL
     "coveragetest/coveragetest_romimot.c"
     "${CFE_ROMIMOT_SOURCE_DIR}/fsw/src/romimot.c"
+    "${CFE_ROMIMOT_SOURCE_DIR}/fsw/src/romimot_hw.c"
 )
 
 
