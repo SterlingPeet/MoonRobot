@@ -39,7 +39,7 @@ static int32 UT_CheckEvent_Hook(void *UserObj, int32 StubRetcode, uint32 CallCou
 {
     UT_CheckEvent_t *State = UserObj;
     uint16           EventId;
-    const char      *Spec;
+    const char *     Spec;
 
     /*
      * The CFE_EVS_SendEvent stub passes the EventID as the
@@ -463,7 +463,7 @@ void Test_ROMIMOT_ProcessCC(void)
      */
     ROMIMOT_ProcessCmd_t TestMsg;
     ROMIMOT_Table_t      TestTblData;
-    void                *TblPtr = &TestTblData;
+    void *               TblPtr = &TestTblData;
 
     memset(&TestTblData, 0, sizeof(TestTblData));
     memset(&TestMsg, 0, sizeof(TestMsg));

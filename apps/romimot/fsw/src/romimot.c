@@ -539,7 +539,7 @@ int32 ROMIMOT_Process(const ROMIMOT_ProcessCmd_t *Msg)
 {
     int32            status;
     ROMIMOT_Table_t *TblPtr;
-    const char      *TableName = "ROMIMOT.RomimotTable";
+    const char *     TableName = "ROMIMOT.RomimotTable";
 
     /* ROMI Motor Driver Use of Table */
 
