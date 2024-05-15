@@ -9,7 +9,7 @@ default_stages:
 - push
 repos:
 -   repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v16.0.4
+    rev: v10.0.1
     hooks:
     -   id: clang-format
 -   repo: https://github.com/PyCQA/docformatter
