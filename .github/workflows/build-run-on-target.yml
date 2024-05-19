@@ -1,0 +1,11 @@
+name: Build and Run on Raspberry Pi Target Hardware
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-run-on-target:
+    name: Build and Run on Raspberry Pi Target Hardware
+    uses: SterlingPeet/MoonRobot/.github/workflows/build-run-app.yml@main
+    with:
+      runs-on: ARM

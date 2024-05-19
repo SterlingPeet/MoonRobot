@@ -14,6 +14,11 @@ on:
         type: string
         required: false
         default: ''
+      runs-on:
+        description: The tag to request the build to run on
+        type: string
+        required: false
+        default: ubuntu-latest
 
 # Force bash to apply pipefail option so pipeline failures aren't masked
 defaults:
@@ -24,7 +29,7 @@ jobs:
   # Checks for duplicate actions. Skips push actions if there is a matching or
   # duplicate pull-request action.
   checks-for-duplicates:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     # Map a step output to a job output
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
@@ -40,15 +45,9 @@ jobs:
     needs: checks-for-duplicates
     if: ${{ needs.checks-for-duplicates.outputs.should_skip != 'true' || contains(github.ref, 'main') }}
     name: Build and run app, confirm startup message
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
 
     steps:
-      - name: Set up environment variables
-        # Apps typically use lowercase targets and uppercase names, this logic is fragile but works
-        run: |
-          echo "APP_UPPER=$(echo ${{ inputs.app-name }} | sed 's/[a-z]/\U&/g')" >> $GITHUB_ENV
-          echo "APP_LOWER=$(echo ${{ inputs.app-name }} | sed 's/[A-Z]/\L&/g')" >> $GITHUB_ENV
-
       - name: Set up start string for verificaiton
         run: |
           if [[ "${{ inputs.startup-string }}" == '' ]]; then
@@ -57,29 +56,10 @@ jobs:
             echo "START_STRING=${{ inputs.startup-string }}" >> $GITHUB_ENV
           fi
 
-      - name: Checkout Bundle Main
+      - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v4
         with:
           submodules: true
-          repository: SterlingPeet/MoonRobot
-
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-        with:
-          path: apps/${{  env.APP_LOWER  }}
-
-      - name: Copy Files (dummy)
-        run: |
-          ls -l
-
-      - name: Add To Build
-        run: |
-          sed -i "/list(APPEND MISSION_GLOBAL_APPLIST/a list(APPEND MISSION_GLOBAL_APPLIST $APP_LOWER)" sample_defs/targets.cmake
-
-      - name: Add To Startup
-        run: |
-          sed -i "1i CFE_APP, $APP_LOWER, ${APP_UPPER}_AppMain, $APP_UPPER, 80, 16384, 0x0, 0;" sample_defs/cpu1_cfe_es_startup.scr
-          cat sample_defs/cpu1_cfe_es_startup.scr
 
       - name: Make install
         run: make SIMULATION=native BUILDTYPE=release OMIT_DEPRECATED=true install
