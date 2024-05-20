@@ -128,6 +128,9 @@ typedef struct
     /* file desccriptor for I2C bus */
     int i2cfd;
 
+    /* I2C connection status flag */
+    bool i2c_open;
+
     /*
     ** Operational data (not reported in housekeeping)...
     */
@@ -151,6 +154,7 @@ typedef struct
 */
 void  ROMIMOT_Main(void);
 int32 ROMIMOT_Init(void);
+int32 ROMIMOT_ConnectI2C(void);
 void  ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr);
 void  ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr);
 int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg);

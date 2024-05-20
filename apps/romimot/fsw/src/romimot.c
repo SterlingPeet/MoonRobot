@@ -242,20 +242,42 @@ int32 ROMIMOT_Init(void)
 
     // setup I2C
 
-    char busname[20];
-    snprintf(busname, 20, "/dev/i2c-%d", i2cBusNumber);
-    ROMIMOT_Data.i2cfd = open_i2c_device(busname);
+    ROMIMOT_Data.i2c_open = false;
 
-    if (ROMIMOT_Data.i2cfd < 0)
-    {
-        CFE_ES_WriteToSysLog("failed to open I2C bus %20s", busname);
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
-    }
+    return CFE_SUCCESS;
+}
 
-    if (ioctl(ROMIMOT_Data.i2cfd, I2C_SLAVE, romiaddr) < 0)
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  */
+/*                                                                            */
+/* Initialize I2C Connection                                                  */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+int32 ROMIMOT_ConnectI2C(void)
+{
+
+    if (ROMIMOT_Data.i2c_open == false)
     {
-        CFE_ES_WriteToSysLog("failed to select romi I2C device");
-        return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+        // setup I2C
+
+        char busname[20];
+        snprintf(busname, 20, "/dev/i2c-%d", i2cBusNumber);
+        ROMIMOT_Data.i2cfd = open_i2c_device(busname);
+
+        if (ROMIMOT_Data.i2cfd < 0)
+        {
+            CFE_ES_WriteToSysLog("failed to open I2C bus %20s", busname);
+            return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+        }
+
+        if (ioctl(ROMIMOT_Data.i2cfd, I2C_SLAVE, romiaddr) < 0)
+        {
+            CFE_ES_WriteToSysLog("failed to select romi I2C device");
+            return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+        }
+
+        CFE_ES_WriteToSysLog("Opened I2C bus %s", busname);
+
+        ROMIMOT_Data.i2c_open = true;
     }
 
     return CFE_SUCCESS;
@@ -341,27 +363,39 @@ void ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr)
         case ROMIMOT_MOT_ENABLE_CC:
             if (ROMIMOT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ROMIMOT_SetEnableCmd_t)))
             {
-                ROMIMOT_SetMotEnable((ROMIMOT_SetEnableCmd_t *)SBBufPtr, true);
+                if (ROMIMOT_ConnectI2C() == CFE_SUCCESS)
+                {
+                    ROMIMOT_SetMotEnable((ROMIMOT_SetEnableCmd_t *)SBBufPtr, true);
+                }
             }
             break;
         case ROMIMOT_MOT_DISABLE_CC:
             if (ROMIMOT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ROMIMOT_SetEnableCmd_t)))
             {
-                ROMIMOT_SetMotEnable((ROMIMOT_SetEnableCmd_t *)SBBufPtr, false);
+                if (ROMIMOT_ConnectI2C() == CFE_SUCCESS)
+                {
+                    ROMIMOT_SetMotEnable((ROMIMOT_SetEnableCmd_t *)SBBufPtr, false);
+                }
             }
             break;
 
         case ROMIMOT_SET_TARGET_CC:
             if (ROMIMOT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ROMIMOT_SetTargetCmd_t)))
             {
-                ROMIMOT_SetTarget((ROMIMOT_SetTargetCmd_t *)SBBufPtr);
+                if (ROMIMOT_ConnectI2C() == CFE_SUCCESS)
+                {
+                    ROMIMOT_SetTarget((ROMIMOT_SetTargetCmd_t *)SBBufPtr);
+                }
             }
             break;
 
         case ROMIMOT_SET_TARGET_DELTA_CC:
             if (ROMIMOT_VerifyCmdLength(&SBBufPtr->Msg, sizeof(ROMIMOT_SetTargetDeltaCmd_t)))
             {
-                ROMIMOT_SetTargetDelta((ROMIMOT_SetTargetDeltaCmd_t *)SBBufPtr);
+                if (ROMIMOT_ConnectI2C() == CFE_SUCCESS)
+                {
+                    ROMIMOT_SetTargetDelta((ROMIMOT_SetTargetDeltaCmd_t *)SBBufPtr);
+                }
             }
             break;
 
@@ -416,83 +450,86 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
 
 int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 {
-    ROMIMOT_Data.CmdCounter++;
-    // CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
-    uint8_t buf[4];
-
-    // Read the buttons on the ROMI, emit an event if pressed.
-    romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
-    if (buf[0])
+    if (ROMIMOT_Data.i2c_open)
     {
-        CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
-    }
+        ROMIMOT_Data.CmdCounter++;
+        // CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
+        uint8_t buf[4];
 
-    // Read the battery voltage on the ROMI, store it in the data struct.
-    romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
-
-    float pcoeff = -0.05;
-
-    // Read the motor encoders
-    struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
-
-    // // Write the current motor speed
-    // if (ROMIMOT_Data.MotorsEnabled)
-    // {
-    //     romiMotorWrite(ROMIMOT_Data.i2cfd, ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
-    // }
-    // else
-    // {
-    //     romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
-    // }
-
-    ROMIMOT_Data.LeftEncoderDelta  = encVals.left - ROMIMOT_Data.RawLeftEncoder;
-    ROMIMOT_Data.RightEncoderDelta = encVals.right - ROMIMOT_Data.RawRightEncoder;
-    ROMIMOT_Data.RawLeftEncoder    = encVals.left;
-    ROMIMOT_Data.RawRightEncoder   = encVals.right;
-
-    ROMIMOT_Data.LeftOdo += ROMIMOT_Data.LeftEncoderDelta;
-    ROMIMOT_Data.RightOdo += ROMIMOT_Data.RightEncoderDelta;
-
-    ROMIMOT_Data.MotState.Payload.MotorsEnabled      = ROMIMOT_Data.MotorsEnabled;
-    ROMIMOT_Data.MotState.Payload.LeftPower          = ROMIMOT_Data.LeftMotSpeed;
-    ROMIMOT_Data.MotState.Payload.RightPower         = ROMIMOT_Data.RightMotSpeed;
-    ROMIMOT_Data.MotState.Payload.LeftEncoderDelta   = ROMIMOT_Data.LeftEncoderDelta;
-    ROMIMOT_Data.MotState.Payload.RightEncoderDelta  = ROMIMOT_Data.RightEncoderDelta;
-    ROMIMOT_Data.MotState.Payload.LeftMotorOdometer  = ROMIMOT_Data.LeftOdo;
-    ROMIMOT_Data.MotState.Payload.RightMotorOdometer = ROMIMOT_Data.RightOdo;
-
-    // printf("PowL: %d, PowR: %d, EncL: %d EncR: %d\n", ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed,
-    // ROMIMOT_Data.RawLeftEncoder, ROMIMOT_Data.RawRightEncoder);
-
-    CFE_SB_TimeStampMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader));
-    CFE_SB_TransmitMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader), true);
-
-    // motVals.left =  (int)(encVals.left * pcoeff);
-    // motVals.right = (int)(encVals.right * pcoeff);
-    uint16_t left  = (int)((ROMIMOT_Data.LeftOdo - ROMIMOT_Data.LeftOdoTrgt) * pcoeff);
-    uint16_t right = (int)((ROMIMOT_Data.RightOdo - ROMIMOT_Data.RightOdoTrgt) * pcoeff);
-    if (ROMIMOT_Data.MotorsEnabled)
-    {
-        romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
-
-        // we'll advance our target position by the delta
-        // ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
-        // ROMIMOT_Data.TargetPosRight += ROMIMOT_Data.TargetDeltaRight;
-        // but if we're close to rollover, we'll swap direction
-        if (encVals.left > 10000)
+        // Read the buttons on the ROMI, emit an event if pressed.
+        romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
+        if (buf[0])
         {
-            ROMIMOT_Data.TargetDeltaLeft  = 0;
-            ROMIMOT_Data.TargetDeltaRight = 0;
+            CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
         }
-        else if (encVals.left < -10000)
+
+        // Read the battery voltage on the ROMI, store it in the data struct.
+        romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
+
+        float pcoeff = -0.05;
+
+        // Read the motor encoders
+        struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
+
+        // // Write the current motor speed
+        // if (ROMIMOT_Data.MotorsEnabled)
+        // {
+        //     romiMotorWrite(ROMIMOT_Data.i2cfd, ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
+        // }
+        // else
+        // {
+        //     romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+        // }
+
+        ROMIMOT_Data.LeftEncoderDelta  = encVals.left - ROMIMOT_Data.RawLeftEncoder;
+        ROMIMOT_Data.RightEncoderDelta = encVals.right - ROMIMOT_Data.RawRightEncoder;
+        ROMIMOT_Data.RawLeftEncoder    = encVals.left;
+        ROMIMOT_Data.RawRightEncoder   = encVals.right;
+
+        ROMIMOT_Data.LeftOdo += ROMIMOT_Data.LeftEncoderDelta;
+        ROMIMOT_Data.RightOdo += ROMIMOT_Data.RightEncoderDelta;
+
+        ROMIMOT_Data.MotState.Payload.MotorsEnabled      = ROMIMOT_Data.MotorsEnabled;
+        ROMIMOT_Data.MotState.Payload.LeftPower          = ROMIMOT_Data.LeftMotSpeed;
+        ROMIMOT_Data.MotState.Payload.RightPower         = ROMIMOT_Data.RightMotSpeed;
+        ROMIMOT_Data.MotState.Payload.LeftEncoderDelta   = ROMIMOT_Data.LeftEncoderDelta;
+        ROMIMOT_Data.MotState.Payload.RightEncoderDelta  = ROMIMOT_Data.RightEncoderDelta;
+        ROMIMOT_Data.MotState.Payload.LeftMotorOdometer  = ROMIMOT_Data.LeftOdo;
+        ROMIMOT_Data.MotState.Payload.RightMotorOdometer = ROMIMOT_Data.RightOdo;
+
+        // printf("PowL: %d, PowR: %d, EncL: %d EncR: %d\n", ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed,
+        // ROMIMOT_Data.RawLeftEncoder, ROMIMOT_Data.RawRightEncoder);
+
+        CFE_SB_TimeStampMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader));
+        CFE_SB_TransmitMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader), true);
+
+        // motVals.left =  (int)(encVals.left * pcoeff);
+        // motVals.right = (int)(encVals.right * pcoeff);
+        uint16_t left  = (int)((ROMIMOT_Data.LeftOdo - ROMIMOT_Data.LeftOdoTrgt) * pcoeff);
+        uint16_t right = (int)((ROMIMOT_Data.RightOdo - ROMIMOT_Data.RightOdoTrgt) * pcoeff);
+        if (ROMIMOT_Data.MotorsEnabled)
         {
-            ROMIMOT_Data.TargetDeltaLeft  = 0;
-            ROMIMOT_Data.TargetDeltaRight = 0;
+            romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
+
+            // we'll advance our target position by the delta
+            // ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
+            // ROMIMOT_Data.TargetPosRight += ROMIMOT_Data.TargetDeltaRight;
+            // but if we're close to rollover, we'll swap direction
+            if (encVals.left > 10000)
+            {
+                ROMIMOT_Data.TargetDeltaLeft  = 0;
+                ROMIMOT_Data.TargetDeltaRight = 0;
+            }
+            else if (encVals.left < -10000)
+            {
+                ROMIMOT_Data.TargetDeltaLeft  = 0;
+                ROMIMOT_Data.TargetDeltaRight = 0;
+            }
         }
-    }
-    else
-    {
-        romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+        else
+        {
+            romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+        }
     }
 
     return CFE_SUCCESS;
