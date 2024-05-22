@@ -36,6 +36,14 @@
 #define ROMIMOT_SET_TARGET_CC       5 // uses ROMIMOT_MotCmd_t
 #define ROMIMOT_SET_TARGET_DELTA_CC 6 // uses ROMIMOT_MotCmd_t
 
+/*
+** ROMIMOT I2C error codes
+*/
+#define ROMIMOT_I2C_DEV_FD_ERR_EID   -1
+#define ROMIMOT_I2C_SETUP_WR_ERR_EID -2
+#define ROMIMOT_I2C_DAT_R_ERR_EID    -3
+#define ROMIMOT_I2C_DAT_W_ERR_EID    -4
+
 /*************************************************************************/
 
 /*

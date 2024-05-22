@@ -34,5 +34,6 @@
 #define ROMIMOT_LEN_ERR_EID           6
 #define ROMIMOT_PIPE_ERR_EID          7
 #define ROMIMOT_I2C_ERR_EID           8
+#define ROMIMOT_I2C_INF_EID           9
 
 #endif /* ROMIMOT_EVENTS_H */

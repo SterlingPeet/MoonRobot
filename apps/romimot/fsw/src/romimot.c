@@ -259,22 +259,33 @@ int32 ROMIMOT_ConnectI2C(void)
     {
         // setup I2C
 
+        bool fail_flag = false;
         char busname[20];
         snprintf(busname, 20, "/dev/i2c-%d", i2cBusNumber);
         ROMIMOT_Data.i2cfd = open_i2c_device(busname);
 
         if (ROMIMOT_Data.i2cfd < 0)
         {
+            fail_flag = true;
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR, "ROMIMOT: Failed to open I2C bus %s",
+                              busname);
             CFE_ES_WriteToSysLog("failed to open I2C bus %20s", busname);
-            return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
         }
 
         if (ioctl(ROMIMOT_Data.i2cfd, I2C_SLAVE, romiaddr) < 0)
         {
+            fail_flag = true;
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: Failed to select romi I2C device address 0x%X", romiaddr);
             CFE_ES_WriteToSysLog("failed to select romi I2C device");
+        }
+
+        if (fail_flag)
+        {
             return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
         }
 
+        CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Opened I2C bus %s", busname);
         CFE_ES_WriteToSysLog("Opened I2C bus %s", busname);
 
         ROMIMOT_Data.i2c_open = true;
@@ -453,18 +464,52 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
     if (ROMIMOT_Data.i2c_open)
     {
         ROMIMOT_Data.CmdCounter++;
-        // CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT wakeup");
+        int     i2c_ret = 0;
         uint8_t buf[4];
 
         // Read the buttons on the ROMI, emit an event if pressed.
-        romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
-        if (buf[0])
+        i2c_ret = romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
+
+        if (i2c_ret == CFE_SUCCESS)
         {
-            CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
+            if (buf[0])
+            {
+                CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
+            }
+        }
+        else if (i2c_ret == ROMIMOT_I2C_SETUP_WR_ERR_EID)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: button I2C setup write operation failed");
+        }
+        else if (i2c_ret == ROMIMOT_I2C_DAT_R_ERR_EID)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: button I2C read operation failed");
+        }
+        else
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: button I2C [unkown] operation failed");
         }
 
         // Read the battery voltage on the ROMI, store it in the data struct.
-        romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
+        i2c_ret = romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
+        if (i2c_ret == ROMIMOT_I2C_SETUP_WR_ERR_EID)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: battery I2C setup write operation failed");
+        }
+        else if (i2c_ret == ROMIMOT_I2C_DAT_R_ERR_EID)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: battery I2C read operation failed");
+        }
+        else if (i2c_ret != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: battery I2C [unkown] operation failed");
+        }
 
         float pcoeff = -0.05;
 
