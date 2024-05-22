@@ -2,11 +2,10 @@
 #   pre-commit install
 # To update the pre-commit hooks run:
 #   pre-commit install-hooks
-exclude: ^(\.tox|ci|\.bumpversion\.cfg)(/|$)
-default_stages:
-- commit
-- merge-commit
-- push
+
+default_install_hook_types: [pre-commit, pre-merge-commit] #, pre-push]
+default_stages: [pre-commit, pre-merge-commit] #, pre-push]
+
 repos:
 -   repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v10.0.1
@@ -70,3 +69,15 @@ repos:
     rev: v1.4.0
     hooks:
     -   id: detect-secrets
+  # CMake Formatting/Linting Utility
+-   repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+#    -   id: cmake-format
+    -   id: cmake-lint
+
+  # GitHub Actions Workflow linter
+-   repo: https://github.com/rhysd/actionlint
+    rev: v1.6.25
+    hooks:
+    -   id: actionlint
