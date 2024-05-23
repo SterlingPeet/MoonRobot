@@ -514,7 +514,25 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         float pcoeff = -0.05;
 
         // Read the motor encoders
-        struct MotorPair encVals = romiEncoderRead(ROMIMOT_Data.i2cfd);
+        MotorPair encVals;
+
+        i2c_ret = romiEncoderRead(ROMIMOT_Data.i2cfd, &encVals);
+
+        if (i2c_ret == ROMIMOT_I2C_SETUP_WR_ERR_EID)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: encoder I2C setup write operation failed");
+        }
+        else if (i2c_ret == ROMIMOT_I2C_DAT_R_ERR_EID)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: encoder I2C read operation failed");
+        }
+        else if (i2c_ret != CFE_SUCCESS)
+        {
+            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
+                              "ROMIMOT: encoder I2C [unkown] operation failed");
+        }
 
         // // Write the current motor speed
         // if (ROMIMOT_Data.MotorsEnabled)

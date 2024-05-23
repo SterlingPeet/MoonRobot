@@ -64,14 +64,18 @@ int romiRead(int i2cfd, uint8_t addr, uint8_t len, uint8_t *buf)
     return 0;
 }
 
-struct MotorPair romiEncoderRead(int i2cfd)
+int romiEncoderRead(int i2cfd, MotorPair *encoders)
 {
-    struct MotorPair encVals;
+    MotorPair encVals;
 
-    romiRead(i2cfd, romiCmdEncoder, 4, (uint8_t *)&encVals);
-    // printf(" enc was %d %d\n", (int16_t)((buf[1]<<8) + buf[0]), (int16_t)((buf[3]<<8) + buf[2]));
-    // printf("enc was %d %d\n", encVals.left, encVals.right);
-    return encVals;
+    int retcode = romiRead(i2cfd, romiCmdEncoder, 4, (uint8_t *)&encVals);
+    if (retcode == 0)
+    {
+        encoders->left  = encVals.left;
+        encoders->right = encVals.right;
+    }
+
+    return retcode;
 }
 
 int romiMotorWrite(int i2cfd, int16_t left, int16_t right)
