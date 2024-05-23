@@ -145,8 +145,9 @@ int32 ROMIMOT_Init(void)
     /*
     ** Initialize app command execution counters
     */
-    ROMIMOT_Data.CmdCounter = 0;
-    ROMIMOT_Data.ErrCounter = 0;
+    ROMIMOT_Data.CmdCounter    = 0;
+    ROMIMOT_Data.ErrCounter    = 0;
+    ROMIMOT_Data.I2CErrCounter = 0;
 
     /*
     ** Initialize app configuration data
@@ -282,6 +283,7 @@ int32 ROMIMOT_ConnectI2C(void)
 
         if (fail_flag)
         {
+            ROMIMOT_Data.I2CErrCounter++;
             return CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
         }
 
@@ -435,6 +437,7 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
     */
     ROMIMOT_Data.HkTlm.Payload.CommandErrorCounter  = ROMIMOT_Data.ErrCounter;
     ROMIMOT_Data.HkTlm.Payload.CommandCounter       = ROMIMOT_Data.CmdCounter;
+    ROMIMOT_Data.HkTlm.Payload.I2CErrorCounter      = ROMIMOT_Data.I2CErrCounter;
     ROMIMOT_Data.HkTlm.Payload.BatteryMillivolts    = ROMIMOT_Data.BatteryMillivolts;
     ROMIMOT_Data.HkTlm.Payload.MotorsEnabled        = ROMIMOT_Data.MotorsEnabled;
     ROMIMOT_Data.HkTlm.Payload.RawLeftMotorEncoder  = ROMIMOT_Data.RawLeftEncoder;
@@ -459,99 +462,93 @@ int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg)
     return CFE_SUCCESS;
 }
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* ROMIMOT Check I2C Transaction for Errors                                   */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+int32 ROMIMOT_CheckI2CTransaction(int RetCode)
+{
+    int32 status = CFE_STATUS_EXTERNAL_RESOURCE_FAIL;
+
+    if (RetCode == ROMIMOT_I2C_SETUP_WR_ERR_EID)
+    {
+        ROMIMOT_Data.I2CErrCounter++;
+        CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR, "ROMIMOT: I2C setup write operation failed");
+    }
+    else if (RetCode == ROMIMOT_I2C_DAT_R_ERR_EID)
+    {
+        ROMIMOT_Data.I2CErrCounter++;
+        CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR, "ROMIMOT: I2C data read operation failed");
+    }
+    else if (RetCode == ROMIMOT_I2C_DAT_W_ERR_EID)
+    {
+        ROMIMOT_Data.I2CErrCounter++;
+        CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR, "ROMIMOT: I2C data write operation failed");
+    }
+    else if (RetCode != 0)
+    {
+        ROMIMOT_Data.I2CErrCounter++;
+        CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR, "ROMIMOT: I2C [unkown] operation failed 0x%x",
+                          RetCode);
+    }
+    else
+    {
+        status = CFE_SUCCESS;
+    }
+
+    return status;
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/*                                                                            */
+/* ROMIMOT Wakeup and service the hardware                                    */
+/*                                                                            */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
 {
     if (ROMIMOT_Data.i2c_open)
     {
         ROMIMOT_Data.CmdCounter++;
-        int     i2c_ret = 0;
-        uint8_t buf[4];
+        int       i2c_ret = 0;
+        uint8_t   buf[4];
+        uint16    battVolts;
+        MotorPair encVals;
 
         // Read the buttons on the ROMI, emit an event if pressed.
         i2c_ret = romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
 
-        if (i2c_ret == CFE_SUCCESS)
+        if (ROMIMOT_CheckI2CTransaction(i2c_ret) == CFE_SUCCESS)
         {
             if (buf[0])
             {
                 CFE_EVS_SendEvent(ROMIMOT_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT button");
             }
         }
-        else if (i2c_ret == ROMIMOT_I2C_SETUP_WR_ERR_EID)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: button I2C setup write operation failed");
-        }
-        else if (i2c_ret == ROMIMOT_I2C_DAT_R_ERR_EID)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: button I2C read operation failed");
-        }
-        else
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: button I2C [unkown] operation failed");
-        }
 
         // Read the battery voltage on the ROMI, store it in the data struct.
-        i2c_ret = romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&ROMIMOT_Data.BatteryMillivolts);
-        if (i2c_ret == ROMIMOT_I2C_SETUP_WR_ERR_EID)
+        i2c_ret = romiRead(ROMIMOT_Data.i2cfd, 10, 2, (uint8_t *)&battVolts);
+        if (ROMIMOT_CheckI2CTransaction(i2c_ret) == CFE_SUCCESS)
         {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: battery I2C setup write operation failed");
-        }
-        else if (i2c_ret == ROMIMOT_I2C_DAT_R_ERR_EID)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: battery I2C read operation failed");
-        }
-        else if (i2c_ret != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: battery I2C [unkown] operation failed");
+            ROMIMOT_Data.BatteryMillivolts = battVolts;
         }
 
         float pcoeff = -0.05;
 
         // Read the motor encoders
-        MotorPair encVals;
-
         i2c_ret = romiEncoderRead(ROMIMOT_Data.i2cfd, &encVals);
+        if (ROMIMOT_CheckI2CTransaction(i2c_ret) == CFE_SUCCESS)
+        {
+            ROMIMOT_Data.LeftEncoderDelta  = encVals.left - ROMIMOT_Data.RawLeftEncoder;
+            ROMIMOT_Data.RightEncoderDelta = encVals.right - ROMIMOT_Data.RawRightEncoder;
+            ROMIMOT_Data.RawLeftEncoder    = encVals.left;
+            ROMIMOT_Data.RawRightEncoder   = encVals.right;
 
-        if (i2c_ret == ROMIMOT_I2C_SETUP_WR_ERR_EID)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: encoder I2C setup write operation failed");
-        }
-        else if (i2c_ret == ROMIMOT_I2C_DAT_R_ERR_EID)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: encoder I2C read operation failed");
-        }
-        else if (i2c_ret != CFE_SUCCESS)
-        {
-            CFE_EVS_SendEvent(ROMIMOT_I2C_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "ROMIMOT: encoder I2C [unkown] operation failed");
+            ROMIMOT_Data.LeftOdo += ROMIMOT_Data.LeftEncoderDelta;
+            ROMIMOT_Data.RightOdo += ROMIMOT_Data.RightEncoderDelta;
         }
 
-        // // Write the current motor speed
-        // if (ROMIMOT_Data.MotorsEnabled)
-        // {
-        //     romiMotorWrite(ROMIMOT_Data.i2cfd, ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
-        // }
-        // else
-        // {
-        //     romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
-        // }
-
-        ROMIMOT_Data.LeftEncoderDelta  = encVals.left - ROMIMOT_Data.RawLeftEncoder;
-        ROMIMOT_Data.RightEncoderDelta = encVals.right - ROMIMOT_Data.RawRightEncoder;
-        ROMIMOT_Data.RawLeftEncoder    = encVals.left;
-        ROMIMOT_Data.RawRightEncoder   = encVals.right;
-
-        ROMIMOT_Data.LeftOdo += ROMIMOT_Data.LeftEncoderDelta;
-        ROMIMOT_Data.RightOdo += ROMIMOT_Data.RightEncoderDelta;
-
+        // Write state data for HK payload
         ROMIMOT_Data.MotState.Payload.MotorsEnabled      = ROMIMOT_Data.MotorsEnabled;
         ROMIMOT_Data.MotState.Payload.LeftPower          = ROMIMOT_Data.LeftMotSpeed;
         ROMIMOT_Data.MotState.Payload.RightPower         = ROMIMOT_Data.RightMotSpeed;
@@ -560,19 +557,15 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         ROMIMOT_Data.MotState.Payload.LeftMotorOdometer  = ROMIMOT_Data.LeftOdo;
         ROMIMOT_Data.MotState.Payload.RightMotorOdometer = ROMIMOT_Data.RightOdo;
 
-        // printf("PowL: %d, PowR: %d, EncL: %d EncR: %d\n", ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed,
-        // ROMIMOT_Data.RawLeftEncoder, ROMIMOT_Data.RawRightEncoder);
-
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader));
         CFE_SB_TransmitMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader), true);
 
-        // motVals.left =  (int)(encVals.left * pcoeff);
-        // motVals.right = (int)(encVals.right * pcoeff);
         uint16_t left  = (int)((ROMIMOT_Data.LeftOdo - ROMIMOT_Data.LeftOdoTrgt) * pcoeff);
         uint16_t right = (int)((ROMIMOT_Data.RightOdo - ROMIMOT_Data.RightOdoTrgt) * pcoeff);
         if (ROMIMOT_Data.MotorsEnabled)
         {
-            romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
+            i2c_ret = romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
+            ROMIMOT_CheckI2CTransaction(i2c_ret);
 
             // we'll advance our target position by the delta
             // ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
@@ -591,7 +584,8 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         }
         else
         {
-            romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+            i2c_ret = romiMotorWrite(ROMIMOT_Data.i2cfd, 0, 0);
+            ROMIMOT_CheckI2CTransaction(i2c_ret);
         }
     }
 
@@ -621,8 +615,9 @@ int32 ROMIMOT_Noop(const ROMIMOT_NoopCmd_t *Msg)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 int32 ROMIMOT_ResetCounters(const ROMIMOT_ResetCountersCmd_t *Msg)
 {
-    ROMIMOT_Data.CmdCounter = 0;
-    ROMIMOT_Data.ErrCounter = 0;
+    ROMIMOT_Data.CmdCounter    = 0;
+    ROMIMOT_Data.ErrCounter    = 0;
+    ROMIMOT_Data.I2CErrCounter = 0;
 
     CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: RESET command");
 

@@ -63,6 +63,7 @@ typedef struct
     */
     uint16 CmdCounter;
     uint8  ErrCounter;
+    uint8  I2CErrCounter;
 
     /*
     ** Housekeeping telemetry packet...
@@ -158,6 +159,7 @@ int32 ROMIMOT_ConnectI2C(void);
 void  ROMIMOT_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr);
 void  ROMIMOT_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr);
 int32 ROMIMOT_ReportHousekeeping(const CFE_MSG_CommandHeader_t *Msg);
+int32 ROMIMOT_CheckI2CTransaction(int32 RetCode);
 int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg);
 int32 ROMIMOT_ResetCounters(const ROMIMOT_ResetCountersCmd_t *Msg);
 int32 ROMIMOT_Process(const ROMIMOT_ProcessCmd_t *Msg);
