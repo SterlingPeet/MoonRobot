@@ -83,7 +83,16 @@ void loop()
     ledYellow(slave.buffer.yellow);
     ledGreen(slave.buffer.green);
     ledRed(slave.buffer.red);
-    motors.setSpeeds(slave.buffer.leftMotor, slave.buffer.rightMotor);
+
+    int set_left  = slave.buffer.leftMotor;
+    int set_right = slave.buffer.rightMotor;
+
+    // If the commanded motor values are inside the allowed range,
+    // set the speet.  We expect values between -300 and 300.
+    if (set_left >= -300 && set_left <= 300 && set_right >= -300 && set_right <= 300)
+    {
+        motors.setSpeeds(set_left, set_right);
+    }
 
     // Playing music involves both reading and writing, since we only
     // want to do it once.
