@@ -133,6 +133,9 @@ int32 ROMIMOT_Init(void)
     ROMIMOT_Data.LeftMotSpeed  = 0;
     ROMIMOT_Data.RightMotSpeed = 0;
 
+    ROMIMOT_Data.LeftOdoStep  = 0;
+    ROMIMOT_Data.RightOdoStep = 0;
+
     ROMIMOT_Data.LeftOdoTrgt  = 0;
     ROMIMOT_Data.RightOdoTrgt = 0;
 
@@ -514,6 +517,7 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         uint8_t   buf[4];
         uint16    battVolts;
         MotorPair encVals;
+        float     pcoeff = 0.05;
 
         // Read the buttons on the ROMI, emit an event if pressed.
         i2c_ret = romiRead(ROMIMOT_Data.i2cfd, 3, 3, buf);
@@ -532,8 +536,6 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         {
             ROMIMOT_Data.BatteryMillivolts = battVolts;
         }
-
-        float pcoeff = -0.05;
 
         // Read the motor encoders
         i2c_ret = romiEncoderRead(ROMIMOT_Data.i2cfd, &encVals);
@@ -560,27 +562,61 @@ int32 ROMIMOT_Wakeup(const CFE_MSG_CommandHeader_t *Msg)
         CFE_SB_TimeStampMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader));
         CFE_SB_TransmitMsg(CFE_MSG_PTR(ROMIMOT_Data.MotState.TelemetryHeader), true);
 
-        uint16_t left  = (int)((ROMIMOT_Data.LeftOdo - ROMIMOT_Data.LeftOdoTrgt) * pcoeff);
-        uint16_t right = (int)((ROMIMOT_Data.RightOdo - ROMIMOT_Data.RightOdoTrgt) * pcoeff);
         if (ROMIMOT_Data.MotorsEnabled)
         {
-            i2c_ret = romiMotorWrite(ROMIMOT_Data.i2cfd, left, right);
-            ROMIMOT_CheckI2CTransaction(i2c_ret);
+            // Calculate the distance and direction between the Odo Step and the Odo target.
+            // If the distance is greater than the target delta, move the Odo step
+            // in the direction of the target by the target delta.  Otherwise
+            // set the Odo step to the target.
+            int32_t leftOdoDistance = ROMIMOT_Data.LeftOdoTrgt - ROMIMOT_Data.LeftOdoStep;
+            int32_t leftDir         = leftOdoDistance > 0 ? 1 : -1;
+            if (leftOdoDistance * leftDir > ROMIMOT_Data.TargetDeltaLeft)
+            {
+                ROMIMOT_Data.LeftOdoStep += ROMIMOT_Data.TargetDeltaLeft * leftDir;
+            }
+            else
+            {
+                ROMIMOT_Data.LeftOdoStep = ROMIMOT_Data.LeftOdoTrgt;
+            }
+            int32_t rightOdoDistance = ROMIMOT_Data.RightOdoTrgt - ROMIMOT_Data.RightOdoStep;
+            int32_t rightDir         = rightOdoDistance > 0 ? 1 : -1;
+            if (rightOdoDistance * rightDir > ROMIMOT_Data.TargetDeltaRight)
+            {
+                ROMIMOT_Data.RightOdoStep += ROMIMOT_Data.TargetDeltaRight * rightDir;
+            }
+            else
+            {
+                ROMIMOT_Data.RightOdoStep = ROMIMOT_Data.RightOdoTrgt;
+            }
 
-            // we'll advance our target position by the delta
-            // ROMIMOT_Data.TargetPosLeft += ROMIMOT_Data.TargetDeltaLeft;
-            // ROMIMOT_Data.TargetPosRight += ROMIMOT_Data.TargetDeltaRight;
-            // but if we're close to rollover, we'll swap direction
-            if (encVals.left > 10000)
+            // Calculate the speed of the motors based on the difference between
+            // the Odo step and the Odo, and the proportional coefficient.
+            ROMIMOT_Data.LeftMotSpeed  = pcoeff * (ROMIMOT_Data.LeftOdoStep - ROMIMOT_Data.LeftOdo);
+            ROMIMOT_Data.RightMotSpeed = pcoeff * (ROMIMOT_Data.RightOdoStep - ROMIMOT_Data.RightOdo);
+
+            // Cap speed at plus or minus 200
+            if (ROMIMOT_Data.LeftMotSpeed > 200)
             {
-                ROMIMOT_Data.TargetDeltaLeft  = 0;
-                ROMIMOT_Data.TargetDeltaRight = 0;
+                ROMIMOT_Data.LeftMotSpeed = 200;
             }
-            else if (encVals.left < -10000)
+            if (ROMIMOT_Data.LeftMotSpeed < -200)
             {
-                ROMIMOT_Data.TargetDeltaLeft  = 0;
-                ROMIMOT_Data.TargetDeltaRight = 0;
+                ROMIMOT_Data.LeftMotSpeed = -200;
             }
+            if (ROMIMOT_Data.RightMotSpeed > 200)
+            {
+                ROMIMOT_Data.RightMotSpeed = 200;
+            }
+            if (ROMIMOT_Data.RightMotSpeed < -200)
+            {
+                ROMIMOT_Data.RightMotSpeed = -200;
+            }
+
+            printf("motor set L: %d %d %d, R: %d %d %d\n", ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.LeftOdoStep,
+                   ROMIMOT_Data.LeftOdoTrgt, ROMIMOT_Data.RightMotSpeed, ROMIMOT_Data.RightOdoStep,
+                   ROMIMOT_Data.RightOdoTrgt);
+            i2c_ret = romiMotorWrite(ROMIMOT_Data.i2cfd, ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
+            ROMIMOT_CheckI2CTransaction(i2c_ret);
         }
         else
         {
@@ -671,12 +707,14 @@ int32 ROMIMOT_SetMotEnable(const ROMIMOT_SetEnableCmd_t *Msg, uint8_t enable)
 }
 int32 ROMIMOT_SetTarget(const ROMIMOT_SetTargetCmd_t *Msg)
 {
+    // ROMIMOT_Data.LeftMotSpeed  = Msg->cmdMotLeft;
+    // ROMIMOT_Data.RightMotSpeed = Msg->cmdMotRight;
     ROMIMOT_Data.LeftOdoTrgt += Msg->cmdMotLeft;
     ROMIMOT_Data.RightOdoTrgt += Msg->cmdMotRight;
 
-    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "ROMIMOT: Motor Target Set : %d %d",
-                      ROMIMOT_Data.LeftMotSpeed, ROMIMOT_Data.RightMotSpeed);
-
+    CFE_EVS_SendEvent(ROMIMOT_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION,
+                      "ROMIMOT: Motor Target set (Absolute) : %d %d", ROMIMOT_Data.LeftOdoTrgt,
+                      ROMIMOT_Data.RightOdoTrgt);
     return CFE_SUCCESS;
 }
 int32 ROMIMOT_SetTargetDelta(const ROMIMOT_SetTargetDeltaCmd_t *Msg)

@@ -109,6 +109,12 @@ typedef struct
     uint32 RightOdo;
 
     /*
+    ** Odometer intermediate targets
+    */
+    uint32 LeftOdoStep;
+    uint32 RightOdoStep;
+
+    /*
     ** Odometer targets
     */
     uint32 LeftOdoTrgt;
