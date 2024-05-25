@@ -105,20 +105,20 @@ typedef struct
     /*
     ** Absolute position of each motor since ROMIMOT app started
     */
-    uint32 LeftOdo;
-    uint32 RightOdo;
+    int32 LeftOdo;
+    int32 RightOdo;
 
     /*
     ** Odometer intermediate targets
     */
-    uint32 LeftOdoStep;
-    uint32 RightOdoStep;
+    int32 LeftOdoStep;
+    int32 RightOdoStep;
 
     /*
     ** Odometer targets
     */
-    uint32 LeftOdoTrgt;
-    uint32 RightOdoTrgt;
+    int32 LeftOdoTrgt;
+    int32 RightOdoTrgt;
 
     /*
      * Motor speed settings
