@@ -27,17 +27,17 @@
 
 /* Development Build Macro Definitions */
 
-#define ROMIMOT_BUILD_NUMBER 1 /*!< Development Build: Number of commits since baseline */
-#define ROMIMOT_BUILD_BASELINE                                                             \
-    "v0.1.99" /*!< Development Build: git tag that is the base for the current development \
-               */
+#define ROMIMOT_BUILD_NUMBER 0 /*!< Development Build: Number of commits since baseline */
+#define ROMIMOT_BUILD_BASELINE                                                            \
+    "v1.0.0" /*!< Development Build: git tag that is the base for the current development \
+              */
 
 /*
  * Version Macros, see \ref cfsversions for definitions.
  */
-#define ROMIMOT_MAJOR_VERSION 0  /*!< @brief Major version number. */
-#define ROMIMOT_MINOR_VERSION 1  /*!< @brief Minor version number. */
-#define ROMIMOT_REVISION      99 /*!< @brief Revision version number. Value of 99 indicates a development version.*/
+#define ROMIMOT_MAJOR_VERSION 1 /*!< @brief Major version number. */
+#define ROMIMOT_MINOR_VERSION 0 /*!< @brief Minor version number. */
+#define ROMIMOT_REVISION      0 /*!< @brief Revision version number. */
 
 /*!
  * @brief Mission revision.
@@ -55,14 +55,12 @@
  * @details Baseline git tag + Number of commits since baseline. @n
  * See @ref cfsversions for format differences between development and release versions.
  */
-#define ROMIMOT_VERSION ROMIMOT_BUILD_BASELINE "+dev" ROMIMOT_STR(ROMIMOT_BUILD_NUMBER)
+#define ROMIMOT_VERSION ROMIMOT_BUILD_BASELINE //  "+dev" ROMIMOT_STR(ROMIMOT_BUILD_NUMBER)
 
 /*! @brief Development Build Version String.
  * @details Reports the current development build's baseline, number, and name. Also includes a note about the latest
  * official version. @n See @ref cfsversions for format differences between development and release versions.
  */
-#define ROMIMOT_VERSION_STRING                                  \
-    " ROMI Motor Driver App DEVELOPMENT BUILD " ROMIMOT_VERSION \
-    ", Last Official Release: v0.1.99" /* For full support please use this version */
+#define ROMIMOT_VERSION_STRING " ROMI Motor Driver App " ROMIMOT_VERSION
 
 #endif /* ROMIMOT_VERSION_H */

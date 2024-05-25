@@ -20,7 +20,6 @@ default_context:
     __app_build_number:        '1'
     __app_filename_slug:       'ddfk_app'
     __app_slug_uc:             'DDFK_APP'
-    _extensions:               ['jinja2_time.TimeExtension']
     _output_dir:               '/Users/speet3/src/MoonRobot/apps'
     _template:                 '../../cookiecutter-cfs-app'
     app_base_perf_id:          '91'
